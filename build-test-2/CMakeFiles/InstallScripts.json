@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"D:/jhatkaa/build-test-2/cmake_install.cmake",
-		"D:/jhatkaa/build-test-2/src/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
