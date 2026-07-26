@@ -1,0 +1,12 @@
+# Build files
+/build/
+
+# Qt Creator files
+*.pro.user*
+*.user
+*.user.pri
+
+# Qt generated files
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
