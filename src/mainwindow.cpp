@@ -85,6 +85,7 @@ void MainWindow::createCanvas() {
     m_gatePalette->addItem("XOR");
     m_gatePalette->addItem("XNOR");
     m_gatePalette->addItem("NAND");
+    m_gatePalette->addItem("NOR");
 
     m_view->setRenderHint(QPainter::Antialiasing);
     m_view->setSceneRect(0, 0, 4000, 3000);
@@ -547,6 +548,7 @@ void MainWindow::addSceneItem(const QString& type, const QPointF& scenePos) {
         else if (kind == "XOR") gateType = GateType::XOR;
         else if (kind == "XNOR") gateType = GateType::XNOR;
         else if (kind == "NAND") gateType = GateType::NAND;
+        else if (kind == "NOR") gateType = GateType::NOR;
         item = new GateItem(ItemKind::Gate, gateType);
     }
     item->setPos(scenePos);

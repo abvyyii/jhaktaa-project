@@ -251,7 +251,7 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
             path.arcTo(w * 0.15, 0, w * 0.7, h, 90, -180);
             path.lineTo(0, h);
             path.closeSubpath();
-        } else if (m_type == GateType::OR || m_type == GateType::XNOR) {
+        } else if (m_type == GateType::OR || m_type == GateType::XNOR || m_type == GateType::NOR) {
             path.moveTo(w * 0.15, 0);
             path.quadTo(w * 0.01, h / 2, w * 0.15, h);
             path.lineTo(w * 0.55, h);
@@ -276,7 +276,7 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
             path.closeSubpath();
         }
         painter->drawPath(path);
-        if (m_type == GateType::NAND || m_type == GateType::XNOR || m_type == GateType::NOT) {
+        if (m_type == GateType::NAND || m_type == GateType::XNOR || m_type == GateType::NOR || m_type == GateType::NOT) {
             painter->setBrush(Qt::white);
             painter->drawEllipse(QPointF(w - 12, h / 2), 8, 8);
         }

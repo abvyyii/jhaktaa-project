@@ -12,7 +12,8 @@ enum class GateType {
     NOT,
     XOR,
     XNOR,
-    NAND
+    NAND,
+    NOR
 };
 
 struct GateState {
@@ -38,6 +39,8 @@ public:
             return a == b;
         case GateType::NAND:
             return !(a && b);
+        case GateType::NOR:
+            return !(a || b);
         default:
             return false;
         }
@@ -57,6 +60,8 @@ public:
             return "XNOR";
         case GateType::NAND:
             return "NAND";
+        case GateType::NOR:
+            return "NOR";
         default:
             return "UNKNOWN";
         }
