@@ -1,0 +1,10 @@
+# ninja log v7
+45	4381	8067858332931168	src/jhatkaa_autogen/timestamp	53b0017e694e50ae
+45	4381	8067858332931168	src/jhatkaa_autogen/mocs_compilation.cpp	53b0017e694e50ae
+45	4381	8067858332931168	D:/jhatkaa/build-test/src/jhatkaa_autogen/timestamp	53b0017e694e50ae
+45	4381	8067858332931168	D:/jhatkaa/build-test/src/jhatkaa_autogen/mocs_compilation.cpp	53b0017e694e50ae
+4405	8179	8067858333878635	src/CMakeFiles/jhatkaa.dir/gateitem.cpp.obj	e165a632d23431e8
+4394	8424	8067858333758949	src/CMakeFiles/jhatkaa.dir/main.cpp.obj	7f34426ce8316c18
+4388	8731	8067858333699399	src/CMakeFiles/jhatkaa.dir/jhatkaa_autogen/mocs_compilation.cpp.obj	ed762f0cbe78d494
+4399	10391	8067858333818792	src/CMakeFiles/jhatkaa.dir/mainwindow.cpp.obj	62517fae414cd1ca
+10392	10797	8067858393733924	src/jhatkaa.exe	59ce29d1f6ca09dd

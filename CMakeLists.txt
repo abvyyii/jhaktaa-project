@@ -1,4 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
+
+if(WIN32 AND CMAKE_GENERATOR STREQUAL "NMake Makefiles")
+    find_program(NINJA_EXECUTABLE ninja)
+    if(NINJA_EXECUTABLE)
+        set(CMAKE_GENERATOR "Ninja" CACHE STRING "CMake generator" FORCE)
+    endif()
+endif()
+
 project(jhatkaa LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
