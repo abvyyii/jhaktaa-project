@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
+#include <QPixmap>
 #include <QPointF>
 #include <QPointer>
 #include <QPushButton>
@@ -52,6 +53,7 @@ private:
     void clearConnections();
     void addSceneItem(const QString& type, const QPointF& scenePos);
     void removeItemWithConnections(GateItem* item);
+    QPixmap createGateIcon(const QString& type, int size = 48);
 
 protected:
     bool eventFilter(QObject* obj, QEvent* event) override;

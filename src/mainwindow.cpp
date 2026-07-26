@@ -4,13 +4,16 @@
 #include <QDebug>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QFont>
 #include <QGraphicsSceneMouseEvent>
 #include <QHeaderView>
 #include <QListWidgetItem>
 #include <QMimeData>
 #include <QMessageBox>
+#include <QPainter>
 #include <QPen>
 #include <QShortcut>
+#include <QSize>
 #include <QStatusBar>
 #include <QTableWidgetItem>
 #include <QWheelEvent>
@@ -76,16 +79,15 @@ void MainWindow::createCanvas() {
     paletteLayout->addWidget(m_gatePalette);
     paletteLayout->addStretch();
 
-    m_gatePalette->setFixedHeight(260);
-    m_gatePalette->addItem("INPUT");
-    m_gatePalette->addItem("OUTPUT");
-    m_gatePalette->addItem("AND");
-    m_gatePalette->addItem("OR");
-    m_gatePalette->addItem("NOT");
-    m_gatePalette->addItem("XOR");
-    m_gatePalette->addItem("XNOR");
-    m_gatePalette->addItem("NAND");
-    m_gatePalette->addItem("NOR");
+    m_gatePalette->setFixedHeight(450);
+    m_gatePalette->setIconSize(QSize(48, 48));
+    
+    const QStringList gateTypes = {"INPUT", "OUTPUT", "AND", "OR", "NOT", "XOR", "XNOR", "NAND", "NOR"};
+    for (const QString& gateType : gateTypes) {
+        auto* item = new QListWidgetItem(m_gatePalette);
+        item->setText(gateType);
+        item->setIcon(createGateIcon(gateType, 48));
+    }
 
     m_view->setRenderHint(QPainter::Antialiasing);
     m_view->setSceneRect(0, 0, 4000, 3000);
@@ -692,4 +694,73 @@ void MainWindow::connectSelectedItems() {
         QMessageBox::information(this, "Jhatkaa", "Failed to connect the selected items.");
     }
     m_updatingSelection = false;
+}
+
+QPixmap MainWindow::createGateIcon(const QString& type, int size) {
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::white);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(Qt::black, 2));
+    painter.setBrush(QColor(245, 245, 245));
+
+    const QString kind = type.trimmed().toUpper();
+    const qreal w = size * 0.8;
+    const qreal h = size * 0.6;
+    const qreal x = (size - w) / 2;
+    const qreal y = (size - h) / 2;
+
+    if (kind == "INPUT") {
+        painter.drawRoundedRect(x, y, w, h, 8, 8);
+        painter.setPen(Qt::black);
+        painter.setFont(QFont("Arial", 8, QFont::Bold));
+        painter.drawText(QRectF(x, y, w, h), Qt::AlignCenter, "IN");
+    } else if (kind == "OUTPUT") {
+        painter.drawRoundedRect(x, y, w, h, 8, 8);
+        painter.setPen(Qt::black);
+        painter.setFont(QFont("Arial", 8, QFont::Bold));
+        painter.drawText(QRectF(x, y, w, h), Qt::AlignCenter, "OUT");
+    } else {
+        QPainterPath path;
+        if (kind == "AND" || kind == "NAND") {
+            path.moveTo(x, y);
+            path.lineTo(x + w * 0.55, y);
+            path.arcTo(x + w * 0.15, y, w * 0.7, h, 90, -180);
+            path.lineTo(x, y + h);
+            path.closeSubpath();
+        } else if (kind == "OR" || kind == "NOR" || kind == "XNOR") {
+            path.moveTo(x + w * 0.15, y);
+            path.quadTo(x + w * 0.01, y + h / 2, x + w * 0.15, y + h);
+            path.lineTo(x + w * 0.55, y + h);
+            path.quadTo(x + w * 0.95, y + h / 2, x + w * 0.55, y);
+            path.closeSubpath();
+        } else if (kind == "XOR") {
+            path.moveTo(x + w * 0.15, y);
+            path.quadTo(x + w * 0.02, y + h / 2, x + w * 0.15, y + h);
+            painter.setPen(QPen(Qt::black, 1.5));
+            painter.drawPath(path);
+            path = QPainterPath();
+            path.moveTo(x + w * 0.2, y);
+            path.lineTo(x + w * 0.55, y);
+            path.quadTo(x + w * 0.95, y + h / 2, x + w * 0.55, y + h);
+            path.lineTo(x + w * 0.2, y + h);
+            path.quadTo(x + w * 0.1, y + h / 2, x + w * 0.2, y);
+            path.closeSubpath();
+        } else if (kind == "NOT") {
+            path.moveTo(x, y);
+            path.lineTo(x + w * 0.8, y + h / 2);
+            path.lineTo(x, y + h);
+            path.closeSubpath();
+        }
+        painter.setPen(QPen(Qt::black, 2));
+        painter.drawPath(path);
+        if (kind == "NAND" || kind == "XNOR" || kind == "NOR" || kind == "NOT") {
+            painter.setBrush(Qt::white);
+            painter.setPen(QPen(Qt::black, 1.5));
+            painter.drawEllipse(QPointF(x + w - 6, y + h / 2), 4, 4);
+        }
+    }
+
+    painter.end();
+    return pixmap;
 }
