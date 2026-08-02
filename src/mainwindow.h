@@ -1,32 +1,12 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QDockWidget>
-#include <QEvent>
-#include <QGraphicsItem>
-#include <QGraphicsLineItem>
-#include <QGraphicsScene>
-#include <QGraphicsView>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QListWidget>
-#include <QPixmap>
-#include <QPointF>
-#include <QPointer>
-#include <QPushButton>
-#include <QTableWidget>
-#include <QToolBar>
-#include <QVBoxLayout>
-#include <vector>
+#include <QString>
 
-#include "gateitem.h"
-
-struct Connection {
-    QPointer<GateItem> source;
-    QPointer<GateItem> target;
-    int inputSlot = -1;
-    QGraphicsLineItem* line = nullptr;
-};
+class QStackedWidget;
+class LoginWidget;
+class RegisterWidget;
+class DashboardWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -35,40 +15,21 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
 
 private slots:
-    void toggleInputA();
-    void toggleInputB();
-    void updateSelectedGate();
-    void connectSelectedItems();
-    void disconnectSelectedConnections();
-    void deleteSelectedItem();
+    void showLoginScreen();
+    void showRegisterScreen();
+    void handleLoginRequested(const QString& identifier, const QString& password);
+    void handleRegisterRequested(const QString& username, const QString& email, const QString& password, const QString& confirmPassword);
+    void handleLogoutRequested();
 
 private:
-    void createToolbar();
-    void createCanvas();
-    void createInspector();
-    void refreshCircuit();
-    void refreshTruthTable();
-    void updateWirePositions();
-    bool addConnection(GateItem* source, GateItem* target, int inputSlot);
-    void clearConnections();
-    void addSceneItem(const QString& type, const QPointF& scenePos);
-    void removeItemWithConnections(GateItem* item);
-    QPixmap createGateIcon(const QString& type, int size = 48);
-
-protected:
-    bool eventFilter(QObject* obj, QEvent* event) override;
+    void applyWindowPalette();
+    void setCurrentScreen(QWidget* screen);
 
 private:
-    QGraphicsScene* m_scene;
-    QGraphicsView* m_view;
-    QPointer<GateItem> m_selectedItem;
-    QLabel* m_statusLabel;
-    QPushButton* m_connectButton;
-    QPushButton* m_disconnectButton;
-    QPushButton* m_deleteButton;
-    QListWidget* m_gatePalette;
-    QTableWidget* m_truthTable;
-    std::vector<Connection> m_connections;
-    bool m_refreshingCircuit;
-    bool m_updatingSelection;
+    QStackedWidget* m_stack;
+    LoginWidget* m_loginWidget;
+    RegisterWidget* m_registerWidget;
+    DashboardWidget* m_dashboardWidget;
+    QString m_loggedInUsername;
+    bool m_databaseReady;
 };
