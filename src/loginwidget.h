@@ -6,7 +6,11 @@
 class QFrame;
 class QLabel;
 class QLineEdit;
+class QMovie;
+class QGraphicsOpacityEffect;
+class QPropertyAnimation;
 class QPushButton;
+class QResizeEvent;
 
 class LoginWidget : public QWidget {
     Q_OBJECT
@@ -26,6 +30,8 @@ signals:
 private:
     void buildUi();
     void applyBasePalette();
+    void setupAnimatedBackground();
+    void updateAnimatedBackgroundSize();
     void stylePanel(QFrame* frame);
     void styleLabel(QLabel* label, bool title = false);
     void styleLineEdit(QLineEdit* edit, bool secret = false);
@@ -33,7 +39,14 @@ private:
     void styleLinkButton(QPushButton* button);
     void updateMessageAppearance(bool success);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
+    QLabel* m_backgroundLabel;
+    QMovie* m_backgroundMovie;
+    QGraphicsOpacityEffect* m_backgroundOpacityEffect;
+    QPropertyAnimation* m_backgroundFadeAnimation;
     QFrame* m_panel;
     QFrame* m_accentBar;
     QLabel* m_brandBadge;

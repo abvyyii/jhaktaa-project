@@ -1,12 +1,19 @@
 #include "loginwidget.h"
 
+#include <QCoreApplication>
+#include <QFileInfo>
 #include <QFrame>
+#include <QGridLayout>
 #include <QHBoxLayout>
-#include <QFont>
+#include <QGraphicsOpacityEffect>
 #include <QLabel>
 #include <QLineEdit>
+#include <QPropertyAnimation>
+#include <QMovie>
 #include <QPalette>
 #include <QPushButton>
+#include <QResizeEvent>
+#include <QDir>
 #include <QVBoxLayout>
 
 namespace {
@@ -20,17 +27,42 @@ const QColor kAccentColor(59, 130, 246);
 const QColor kSecondaryButtonColor(226, 232, 240);
 const QColor kErrorColor(150, 56, 40);
 const QColor kSuccessColor(76, 111, 63);
+constexpr qreal kBackgroundOpacity = 0.3;
+
+QString findBackgroundGifPath() {
+    const QString appDirPath = QCoreApplication::applicationDirPath();
+    const QStringList candidates = {
+        QDir::cleanPath(appDirPath + "/../bg_ref.gif"),
+        QDir::cleanPath(appDirPath + "/../bg_ref.GIF"),
+        QDir::cleanPath(appDirPath + "/../../bg_ref.gif"),
+        QDir::cleanPath(appDirPath + "/../../bg_ref.GIF"),
+        appDirPath + "/bg_ref.gif",
+        appDirPath + "/bg_ref.GIF"
+    };
+
+    for (const QString& candidate : candidates) {
+        if (!candidate.isEmpty() && QFileInfo::exists(candidate)) {
+            return candidate;
+        }
+    }
+
+    return QString();
+}
 }
 
 LoginWidget::LoginWidget(QWidget* parent)
     : QWidget(parent),
+      m_backgroundLabel(new QLabel(this)),
+      m_backgroundMovie(new QMovie(this)),
+    m_backgroundOpacityEffect(nullptr),
+    m_backgroundFadeAnimation(nullptr),
       m_panel(new QFrame(this)),
-    m_accentBar(new QFrame(this)),
-    m_brandBadge(new QLabel("J", this)),
-            m_bannerLeftBolt(new QLabel(QStringLiteral("⚡"), this)),
-            m_bannerTitle(new QLabel(QStringLiteral("Jhatkaa"), this)),
-            m_bannerRightBolt(new QLabel(QStringLiteral("⚡"), this)),
-      m_titleLabel(new QLabel("Welcome back", this)),
+      m_accentBar(new QFrame(this)),
+      m_brandBadge(new QLabel("J", this)),
+      m_bannerLeftBolt(new QLabel(QStringLiteral("⚡"), this)),
+      m_bannerTitle(new QLabel(QStringLiteral("Jhatkaa"), this)),
+      m_bannerRightBolt(new QLabel(QStringLiteral("⚡"), this)),
+      m_titleLabel(new QLabel("Welcome!!!", this)),
       m_subtitleLabel(new QLabel("Log in with your username or email.", this)),
       m_messageLabel(new QLabel(this)),
       m_identifierLabel(new QLabel("Username or email", this)),
@@ -45,19 +77,32 @@ LoginWidget::LoginWidget(QWidget* parent)
 void LoginWidget::buildUi() {
     applyBasePalette();
 
-    auto* rootLayout = new QVBoxLayout(this);
-    rootLayout->setContentsMargins(24, 24, 24, 24);
+    auto* rootLayout = new QGridLayout(this);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
     rootLayout->setSpacing(0);
 
-    rootLayout->addStretch();
+    setupAnimatedBackground();
+    m_backgroundLabel->setGeometry(rect());
+
+    auto* contentWidget = new QWidget(this);
+    contentWidget->setAutoFillBackground(false);
+    auto* contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(24, 24, 24, 24);
+    contentLayout->setSpacing(0);
+
+    contentLayout->addStretch();
 
     auto* centerRow = new QHBoxLayout();
     centerRow->addStretch();
     centerRow->addWidget(m_panel, 0, Qt::AlignCenter);
     centerRow->addStretch();
-    rootLayout->addLayout(centerRow);
+    contentLayout->addLayout(centerRow);
 
-    rootLayout->addStretch();
+    contentLayout->addStretch();
+
+    rootLayout->addWidget(m_backgroundLabel, 0, 0);
+    rootLayout->addWidget(contentWidget, 0, 0);
+    contentWidget->raise();
 
     stylePanel(m_panel);
     m_accentBar->setFixedHeight(8);
@@ -79,18 +124,18 @@ void LoginWidget::buildUi() {
     m_brandBadge->setPalette(badgePalette);
     m_brandBadge->setAutoFillBackground(true);
 
-    auto styleBolt = [](QLabel* label, bool large) {
+    auto styleBolt = [](QLabel* label) {
         QFont font = label->font();
         font.setBold(true);
-        font.setPointSize(large ? 24 : 19);
+        font.setPointSize(19);
         label->setFont(font);
         label->setAlignment(Qt::AlignCenter);
         QPalette palette = label->palette();
         palette.setColor(QPalette::WindowText, kSparkColor);
         label->setPalette(palette);
     };
-    styleBolt(m_bannerLeftBolt, false);
-    styleBolt(m_bannerRightBolt, false);
+    styleBolt(m_bannerLeftBolt);
+    styleBolt(m_bannerRightBolt);
 
     QFont bannerFont = m_bannerTitle->font();
     bannerFont.setBold(true);
@@ -122,10 +167,8 @@ void LoginWidget::buildUi() {
     brandColumn->setSpacing(4);
     brandColumn->addWidget(m_titleLabel);
     brandColumn->addWidget(m_subtitleLabel);
-
     badgeBox->addLayout(brandColumn);
     badgeBox->addStretch();
-
     headerRow->addLayout(badgeBox);
     headerRow->addStretch();
 
@@ -184,6 +227,45 @@ void LoginWidget::buildUi() {
     });
 }
 
+void LoginWidget::setupAnimatedBackground() {
+    m_backgroundLabel->setAlignment(Qt::AlignCenter);
+    m_backgroundLabel->setScaledContents(true);
+    QPalette backgroundPalette = m_backgroundLabel->palette();
+    backgroundPalette.setColor(QPalette::Window, kWindowColor);
+    m_backgroundLabel->setPalette(backgroundPalette);
+    m_backgroundLabel->setAutoFillBackground(true);
+
+    m_backgroundOpacityEffect = new QGraphicsOpacityEffect(m_backgroundLabel);
+    m_backgroundOpacityEffect->setOpacity(kBackgroundOpacity);
+    m_backgroundLabel->setGraphicsEffect(m_backgroundOpacityEffect);
+
+    const QString backgroundPath = findBackgroundGifPath();
+    if (!backgroundPath.isEmpty()) {
+        m_backgroundMovie->setFileName(backgroundPath);
+        m_backgroundMovie->setCacheMode(QMovie::CacheAll);
+        m_backgroundMovie->setScaledSize(size());
+        m_backgroundLabel->setMovie(m_backgroundMovie);
+        m_backgroundMovie->start();
+
+        m_backgroundFadeAnimation = new QPropertyAnimation(m_backgroundOpacityEffect, "opacity", this);
+        m_backgroundFadeAnimation->setDuration(450);
+        m_backgroundFadeAnimation->setStartValue(0.0);
+        m_backgroundFadeAnimation->setEndValue(kBackgroundOpacity);
+        m_backgroundFadeAnimation->start();
+    } else {
+        m_backgroundLabel->setText("Place bg_ref.gif on your Desktop to enable the animated background.");
+        QPalette palette = m_backgroundLabel->palette();
+        palette.setColor(QPalette::WindowText, QColor(122, 110, 95));
+        m_backgroundLabel->setPalette(palette);
+    }
+}
+
+void LoginWidget::updateAnimatedBackgroundSize() {
+    if (m_backgroundMovie->isValid()) {
+        m_backgroundMovie->setScaledSize(size());
+    }
+}
+
 void LoginWidget::applyBasePalette() {
     QFont font(QStringLiteral("Segoe UI"), 10);
     setFont(font);
@@ -192,6 +274,12 @@ void LoginWidget::applyBasePalette() {
     palette.setColor(QPalette::Window, kWindowColor);
     setPalette(palette);
     setAutoFillBackground(true);
+}
+
+void LoginWidget::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    m_backgroundLabel->setGeometry(rect());
+    updateAnimatedBackgroundSize();
 }
 
 void LoginWidget::stylePanel(QFrame* frame) {
