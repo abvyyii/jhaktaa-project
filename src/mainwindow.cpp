@@ -79,8 +79,12 @@ void MainWindow::createCanvas() {
     paletteLayout->addWidget(m_gatePalette);
     paletteLayout->addStretch();
 
-    m_gatePalette->setFixedHeight(450);
+    palettePanel->setMinimumWidth(288);
+    m_gatePalette->setMinimumWidth(264);
+    m_gatePalette->setFixedHeight(480);
     m_gatePalette->setIconSize(QSize(48, 48));
+    m_gatePalette->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_gatePalette->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
     const QStringList gateTypes = {"INPUT", "OUTPUT", "AND", "OR", "NOT", "XOR", "XNOR", "NAND", "NOR"};
     for (const QString& gateType : gateTypes) {
