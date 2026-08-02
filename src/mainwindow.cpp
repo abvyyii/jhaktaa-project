@@ -698,7 +698,7 @@ void MainWindow::connectSelectedItems() {
 
 QPixmap MainWindow::createGateIcon(const QString& type, int size) {
     QPixmap pixmap(size, size);
-    pixmap.fill(Qt::white);
+    pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setPen(QPen(Qt::black, 2));
