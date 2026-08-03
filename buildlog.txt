@@ -1,0 +1,5 @@
+Change Dir: 'C:/Users/futur/Desktop/jhaktaa-project/build'
+
+Run Build Command(s): C:/msys64/ucrt64/bin/ninja.exe -v
+ninja: no work to do.
+
