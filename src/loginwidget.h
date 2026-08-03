@@ -33,6 +33,7 @@ private:
     void setupAnimatedBackground();
     void updateAnimatedBackgroundSize();
     void stylePanel(QFrame* frame);
+    void stylePanelBackdrop(QFrame* backdrop, QFrame* host);
     void styleLabel(QLabel* label, bool title = false);
     void styleLineEdit(QLineEdit* edit, bool secret = false);
     void stylePrimaryButton(QPushButton* button);
@@ -48,6 +49,7 @@ private:
     QGraphicsOpacityEffect* m_backgroundOpacityEffect;
     QPropertyAnimation* m_backgroundFadeAnimation;
     QFrame* m_panel;
+    QFrame* m_panelBackdrop;
     QFrame* m_accentBar;
     QLabel* m_brandBadge;
     QLabel* m_bannerLeftBolt;

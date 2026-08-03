@@ -291,6 +291,9 @@ void MainWindow::applyWindowPalette() {
             background-color: #F0F0F0;
             color: #000000;
         }
+        LoginWidget {
+            background-color: transparent;
+        }
         QStackedWidget {
             background-color: #F0F0F0;
         }

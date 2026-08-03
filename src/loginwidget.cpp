@@ -5,15 +5,18 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QGraphicsBlurEffect>
 #include <QGraphicsOpacityEffect>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPropertyAnimation>
 #include <QMovie>
+#include <QPixmap>
 #include <QPalette>
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QDir>
+#include <QFile>
 #include <QVBoxLayout>
 
 namespace {
@@ -27,21 +30,35 @@ const QColor kAccentColor(59, 130, 246);
 const QColor kSecondaryButtonColor(226, 232, 240);
 const QColor kErrorColor(150, 56, 40);
 const QColor kSuccessColor(76, 111, 63);
-constexpr qreal kBackgroundOpacity = 0.3;
+constexpr qreal kBackgroundOpacity = 0.75;
+constexpr int kBackgroundBlurRadius = 24;
 
 QString findBackgroundGifPath() {
-    const QString appDirPath = QCoreApplication::applicationDirPath();
-    const QStringList candidates = {
-        QDir::cleanPath(appDirPath + "/../bg_ref.gif"),
-        QDir::cleanPath(appDirPath + "/../bg_ref.GIF"),
-        QDir::cleanPath(appDirPath + "/../../bg_ref.gif"),
-        QDir::cleanPath(appDirPath + "/../../bg_ref.GIF"),
-        appDirPath + "/bg_ref.gif",
-        appDirPath + "/bg_ref.GIF"
+    if (QFile::exists(QStringLiteral(":/bg_ref.gif"))) {
+        return QStringLiteral(":/bg_ref.gif");
+    }
+
+    const QStringList searchRoots = {
+        QDir::currentPath(),
+        QCoreApplication::applicationDirPath(),
+        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/.."),
+        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../.."),
+        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../../..")
     };
 
+    QStringList candidates;
+    for (const QString& root : searchRoots) {
+        if (root.isEmpty()) {
+            continue;
+        }
+        candidates << QDir::cleanPath(root + "/bg_ref.gif");
+        candidates << QDir::cleanPath(root + "/bg_ref.GIF");
+    }
+    candidates << QStringLiteral("bg_ref.gif");
+    candidates << QStringLiteral("bg_ref.GIF");
+
     for (const QString& candidate : candidates) {
-        if (!candidate.isEmpty() && QFileInfo::exists(candidate)) {
+        if (!candidate.isEmpty() && QFileInfo::exists(candidate) && QFileInfo(candidate).isFile()) {
             return candidate;
         }
     }
@@ -57,8 +74,9 @@ LoginWidget::LoginWidget(QWidget* parent)
     m_backgroundOpacityEffect(nullptr),
     m_backgroundFadeAnimation(nullptr),
       m_panel(new QFrame(this)),
+      m_panelBackdrop(new QFrame(this)),
       m_accentBar(new QFrame(this)),
-      m_brandBadge(new QLabel("J", this)),
+      m_brandBadge(new QLabel(this)),
       m_bannerLeftBolt(new QLabel(QStringLiteral("⚡"), this)),
       m_bannerTitle(new QLabel(QStringLiteral("Jhatkaa"), this)),
       m_bannerRightBolt(new QLabel(QStringLiteral("⚡"), this)),
@@ -76,6 +94,8 @@ LoginWidget::LoginWidget(QWidget* parent)
 
 void LoginWidget::buildUi() {
     applyBasePalette();
+    setAttribute(Qt::WA_StyledBackground, true);
+    setStyleSheet(QStringLiteral("background: transparent;"));
 
     auto* rootLayout = new QGridLayout(this);
     rootLayout->setContentsMargins(0, 0, 0, 0);
@@ -105,24 +125,32 @@ void LoginWidget::buildUi() {
     contentWidget->raise();
 
     stylePanel(m_panel);
+    stylePanelBackdrop(m_panelBackdrop, m_panel);
+    m_panel->raise();
     m_accentBar->setFixedHeight(8);
     QPalette accentPalette = m_accentBar->palette();
     accentPalette.setColor(QPalette::Window, kAccentColor);
     m_accentBar->setPalette(accentPalette);
     m_accentBar->setAutoFillBackground(true);
 
-    QFont badgeFont = m_brandBadge->font();
-    badgeFont.setBold(true);
-    badgeFont.setPointSize(18);
-    m_brandBadge->setFont(badgeFont);
+    QPixmap logoPixmap(QStringLiteral(":/logo.png"));
+    if (!logoPixmap.isNull()) {
+        m_brandBadge->setPixmap(logoPixmap.scaled(42, 42, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    } else {
+        m_brandBadge->setText("J");
+        QFont badgeFont = m_brandBadge->font();
+        badgeFont.setBold(true);
+        badgeFont.setPointSize(18);
+        m_brandBadge->setFont(badgeFont);
+        QPalette badgePalette = m_brandBadge->palette();
+        badgePalette.setColor(QPalette::Window, kBrandColor);
+        badgePalette.setColor(QPalette::WindowText, Qt::white);
+        m_brandBadge->setPalette(badgePalette);
+        m_brandBadge->setAutoFillBackground(true);
+    }
     m_brandBadge->setAlignment(Qt::AlignCenter);
     m_brandBadge->setMinimumSize(42, 42);
     m_brandBadge->setMaximumSize(42, 42);
-    QPalette badgePalette = m_brandBadge->palette();
-    badgePalette.setColor(QPalette::Window, kBrandColor);
-    badgePalette.setColor(QPalette::WindowText, Qt::white);
-    m_brandBadge->setPalette(badgePalette);
-    m_brandBadge->setAutoFillBackground(true);
 
     auto styleBolt = [](QLabel* label) {
         QFont font = label->font();
@@ -228,16 +256,11 @@ void LoginWidget::buildUi() {
 }
 
 void LoginWidget::setupAnimatedBackground() {
+    m_backgroundLabel->show();
     m_backgroundLabel->setAlignment(Qt::AlignCenter);
     m_backgroundLabel->setScaledContents(true);
-    QPalette backgroundPalette = m_backgroundLabel->palette();
-    backgroundPalette.setColor(QPalette::Window, kWindowColor);
-    m_backgroundLabel->setPalette(backgroundPalette);
-    m_backgroundLabel->setAutoFillBackground(true);
-
-    m_backgroundOpacityEffect = new QGraphicsOpacityEffect(m_backgroundLabel);
-    m_backgroundOpacityEffect->setOpacity(kBackgroundOpacity);
-    m_backgroundLabel->setGraphicsEffect(m_backgroundOpacityEffect);
+    m_backgroundLabel->setStyleSheet(QStringLiteral("background: transparent;"));
+    m_backgroundLabel->setAutoFillBackground(false);
 
     const QString backgroundPath = findBackgroundGifPath();
     if (!backgroundPath.isEmpty()) {
@@ -246,14 +269,8 @@ void LoginWidget::setupAnimatedBackground() {
         m_backgroundMovie->setScaledSize(size());
         m_backgroundLabel->setMovie(m_backgroundMovie);
         m_backgroundMovie->start();
-
-        m_backgroundFadeAnimation = new QPropertyAnimation(m_backgroundOpacityEffect, "opacity", this);
-        m_backgroundFadeAnimation->setDuration(450);
-        m_backgroundFadeAnimation->setStartValue(0.0);
-        m_backgroundFadeAnimation->setEndValue(kBackgroundOpacity);
-        m_backgroundFadeAnimation->start();
     } else {
-        m_backgroundLabel->setText("Place bg_ref.gif on your Desktop to enable the animated background.");
+        m_backgroundLabel->clear();
         QPalette palette = m_backgroundLabel->palette();
         palette.setColor(QPalette::WindowText, QColor(122, 110, 95));
         m_backgroundLabel->setPalette(palette);
@@ -263,6 +280,11 @@ void LoginWidget::setupAnimatedBackground() {
 void LoginWidget::updateAnimatedBackgroundSize() {
     if (m_backgroundMovie->isValid()) {
         m_backgroundMovie->setScaledSize(size());
+    }
+
+    const QPixmap currentPixmap = m_backgroundLabel->pixmap(Qt::ReturnByValue);
+    if (!currentPixmap.isNull()) {
+        m_backgroundLabel->setPixmap(currentPixmap.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
     }
 }
 
@@ -280,6 +302,9 @@ void LoginWidget::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     m_backgroundLabel->setGeometry(rect());
     updateAnimatedBackgroundSize();
+    if (m_panelBackdrop && m_panel) {
+        m_panelBackdrop->setGeometry(m_panel->geometry());
+    }
 }
 
 void LoginWidget::stylePanel(QFrame* frame) {
@@ -290,11 +315,29 @@ void LoginWidget::stylePanel(QFrame* frame) {
     palette.setColor(QPalette::Shadow, kPanelColor);
     frame->setPalette(palette);
     frame->setAutoFillBackground(true);
-    frame->setFrameShape(QFrame::Box);
+    frame->setAttribute(Qt::WA_TranslucentBackground);
+    frame->setFrameShape(QFrame::NoFrame);
     frame->setFrameShadow(QFrame::Plain);
     frame->setLineWidth(0);
+    frame->setStyleSheet(QStringLiteral("background: transparent;"));
     frame->setMinimumWidth(460);
     frame->setMaximumWidth(560);
+}
+
+void LoginWidget::stylePanelBackdrop(QFrame* backdrop, QFrame* host) {
+    backdrop->setParent(this);
+    backdrop->setGeometry(host->geometry());
+    backdrop->setAutoFillBackground(true);
+    backdrop->setAttribute(Qt::WA_TranslucentBackground);
+    backdrop->setFrameShape(QFrame::NoFrame);
+    backdrop->setFrameShadow(QFrame::Plain);
+    backdrop->setLineWidth(0);
+    backdrop->setStyleSheet(QStringLiteral("background-color: rgba(255, 255, 255, 0.60); border: 1px solid rgba(255, 255, 255, 0.95); border-radius: 16px;"));
+    auto* blurEffect = new QGraphicsBlurEffect(backdrop);
+    blurEffect->setBlurRadius(kBackgroundBlurRadius);
+    backdrop->setGraphicsEffect(blurEffect);
+    backdrop->lower();
+    backdrop->show();
 }
 
 void LoginWidget::styleLabel(QLabel* label, bool title) {
@@ -303,6 +346,7 @@ void LoginWidget::styleLabel(QLabel* label, bool title) {
     font.setPointSize(title ? 17 : 10);
     label->setFont(font);
     label->setAlignment(Qt::AlignLeft);
+    label->setStyleSheet(QStringLiteral("border: none; background: transparent;"));
     QPalette palette = label->palette();
     palette.setColor(QPalette::WindowText, kTextColor);
     label->setPalette(palette);
@@ -316,6 +360,7 @@ void LoginWidget::styleLineEdit(QLineEdit* edit, bool secret) {
     palette.setColor(QPalette::PlaceholderText, QColor(110, 110, 110));
     edit->setPalette(palette);
     edit->setAutoFillBackground(true);
+    edit->setStyleSheet(QStringLiteral("border: 1px solid rgba(110, 110, 110, 0.45); border-radius: 8px; padding: 6px 8px;"));
     edit->setMinimumHeight(32);
     edit->setClearButtonEnabled(true);
     if (secret) {
@@ -329,6 +374,7 @@ void LoginWidget::stylePrimaryButton(QPushButton* button) {
     palette.setColor(QPalette::ButtonText, Qt::white);
     button->setPalette(palette);
     button->setAutoFillBackground(true);
+    button->setStyleSheet(QStringLiteral("QPushButton { background-color: rgba(59, 130, 246, 0.60); color: white; border: 1px solid rgba(59, 130, 246, 0.70); border-radius: 8px; padding: 6px 10px; } QPushButton:hover { background-color: rgba(59, 130, 246, 0.40); }"));
     button->setMinimumHeight(36);
     button->setMinimumWidth(120);
 }
@@ -336,8 +382,11 @@ void LoginWidget::stylePrimaryButton(QPushButton* button) {
 void LoginWidget::styleLinkButton(QPushButton* button) {
     QPalette palette = button->palette();
     palette.setColor(QPalette::ButtonText, kAccentColor);
+    palette.setColor(QPalette::WindowText, kAccentColor);
     button->setPalette(palette);
     button->setFlat(true);
+    button->setAutoFillBackground(false);
+    button->setStyleSheet(QStringLiteral("background: transparent; border: none; color: #2563EB; text-decoration: none;"));
 }
 
 void LoginWidget::updateMessageAppearance(bool success) {

@@ -8,6 +8,7 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class QToolButton;
+class QResizeEvent;
 
 class RegisterWidget : public QWidget {
     Q_OBJECT
@@ -28,7 +29,10 @@ signals:
 private:
     void buildUi();
     void applyBasePalette();
+    void setupAnimatedBackground();
+    void updateAnimatedBackgroundSize();
     void stylePanel(QFrame* frame);
+    void stylePanelBackdrop(QFrame* backdrop, QFrame* host);
     void styleLabel(QLabel* label, bool title = false);
     void styleLineEdit(QLineEdit* edit, bool secret = false);
     void stylePrimaryButton(QPushButton* button);
@@ -38,8 +42,19 @@ private:
     void setConfirmPasswordVisibility(bool visible);
     void updateMessageAppearance(bool success);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private:
+    QLabel* m_backgroundLabel;
+    QMovie* m_backgroundMovie;
     QFrame* m_panel;
+    QFrame* m_panelBackdrop;
+    QFrame* m_accentBar;
+    QLabel* m_brandBadge;
+    QLabel* m_bannerLeftBolt;
+    QLabel* m_bannerTitle;
+    QLabel* m_bannerRightBolt;
     QLabel* m_titleLabel;
     QLabel* m_subtitleLabel;
     QLabel* m_messageLabel;
