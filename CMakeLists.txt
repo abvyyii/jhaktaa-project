@@ -23,15 +23,9 @@ if(MINGW)
     )
 endif()
 
-find_package(Qt6 COMPONENTS Widgets Sql QUIET)
-if(NOT Qt6_FOUND)
-    find_package(Qt5 COMPONENTS Widgets Sql REQUIRED)
-    set(QT_WIDGETS_TARGET Qt5::Widgets)
-    set(QT_SQL_TARGET Qt5::Sql)
-else()
-    set(QT_WIDGETS_TARGET Qt6::Widgets)
-    set(QT_SQL_TARGET Qt6::Sql)
-endif()
+find_package(Qt6 COMPONENTS Widgets Sql REQUIRED)
+set(QT_WIDGETS_TARGET Qt6::Widgets)
+set(QT_SQL_TARGET Qt6::Sql)
 
 message(STATUS "Using Qt targets: ${QT_WIDGETS_TARGET}, ${QT_SQL_TARGET}")
 

@@ -11,6 +11,7 @@
 #include <QListWidgetItem>
 #include <QMimeData>
 #include <QMessageBox>
+#include <QPalette>
 #include <QPainter>
 #include <QPen>
 #include <QShortcut>
@@ -80,7 +81,83 @@ DashboardWidget::DashboardWidget(QWidget* parent)
 void DashboardWidget::applyDashboardPalette() {
     QFont font(QStringLiteral("Segoe UI"), 10);
     setFont(font);
-    setAutoFillBackground(false);
+
+    QPalette palette;
+    palette.setColor(QPalette::Window, QColor("#F0F0F0"));
+    palette.setColor(QPalette::WindowText, QColor("#000000"));
+    palette.setColor(QPalette::Base, QColor("#FFFFFF"));
+    palette.setColor(QPalette::AlternateBase, QColor("#F0F0F0"));
+    palette.setColor(QPalette::Text, QColor("#000000"));
+    palette.setColor(QPalette::Button, QColor("#E1E1E1"));
+    palette.setColor(QPalette::ButtonText, QColor("#000000"));
+    palette.setColor(QPalette::Highlight, QColor("#0078D7"));
+    palette.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
+    palette.setColor(QPalette::Light, QColor("#FFFFFF"));
+    palette.setColor(QPalette::Dark, QColor("#ADADAD"));
+    palette.setColor(QPalette::Mid, QColor("#D0D0D0"));
+    palette.setColor(QPalette::Disabled, QPalette::Text, QColor("#A0A0A0"));
+    palette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor("#A0A0A0"));
+
+    setPalette(palette);
+    setAutoFillBackground(true);
+    setStyleSheet(R"(
+        QWidget, QMainWindow, QDockWidget, QToolBar, QStatusBar, QFrame {
+            background-color: #F0F0F0;
+            color: #000000;
+        }
+        QLabel {
+            background-color: transparent;
+            color: #000000;
+            border: none;
+            padding: 0;
+        }
+        QListWidget, QTableWidget, QLineEdit, QPlainTextEdit, QTextEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #ADADAD;
+        }
+        QListWidget::item {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 4px;
+        }
+        QListWidget::item:selected {
+            background-color: #E5F1FB;
+            color: #000000;
+        }
+        QPushButton {
+            background-color: #E1E1E1;
+            color: #000000;
+            border: 1px solid #ADADAD;
+            padding: 6px 10px;
+        }
+        QPushButton:hover {
+            background-color: #E5F1FB;
+        }
+        QPushButton:pressed {
+            background-color: #CCE4F7;
+        }
+        QHeaderView::section {
+            background-color: #F0F0F0;
+            color: #000000;
+            border: 1px solid #ADADAD;
+            padding: 4px;
+        }
+        QScrollBar:vertical, QScrollBar:horizontal {
+            background-color: #F0F0F0;
+            border: 1px solid #ADADAD;
+        }
+        QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+            background-color: #E1E1E1;
+            border: 1px solid #ADADAD;
+        }
+        QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+            background-color: #E5F1FB;
+        }
+        QScrollBar::handle:vertical:pressed, QScrollBar::handle:horizontal:pressed {
+            background-color: #CCE4F7;
+        }
+    )");
 }
 
 void DashboardWidget::createToolbar() {
@@ -95,7 +172,7 @@ void DashboardWidget::createCanvas() {
     auto* palettePanel = new QWidget(this);
     palettePanel->setMinimumWidth(288);
     auto* paletteLayout = new QVBoxLayout(palettePanel);
-    paletteLayout->addWidget(new QLabel("Drag items onto the canvas"));
+    paletteLayout->addWidget(new QLabel("Click items to add them onto canvas"));
     paletteLayout->addWidget(m_gatePalette);
     paletteLayout->addSpacing(18);
     paletteLayout->addWidget(new QLabel("Pre-built library"));
@@ -126,6 +203,8 @@ void DashboardWidget::createCanvas() {
 
     m_view->setRenderHint(QPainter::Antialiasing);
     m_view->setSceneRect(0, 0, 4000, 3000);
+    m_view->setBackgroundBrush(QColor("#FFFFFF"));
+    m_view->setStyleSheet("QGraphicsView { background-color: #FFFFFF; border: 1px solid #ADADAD; }");
     m_view->setDragMode(QGraphicsView::RubberBandDrag);
     m_view->setMinimumSize(700, 600);
     m_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -766,10 +845,10 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setBrush(QColor("#3C3C3C"));
-    painter.setPen(QPen(QColor("#4A4A4A"), 2));
+    painter.setBrush(QColor("#FFFFFF"));
+    painter.setPen(QPen(QColor("#ADADAD"), 2));
     painter.drawRoundedRect(4, 4, size - 8, size - 8, 8, 8);
-    painter.setPen(QColor("#F1F1F1"));
+    painter.setPen(QColor("#000000"));
     painter.drawText(pixmap.rect(), Qt::AlignCenter, type);
     return pixmap;
 }

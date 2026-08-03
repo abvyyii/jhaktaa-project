@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
   <qresource prefix="/">
     <file>dark_theme.qss</file>
+    <file>logo.png</file>
   </qresource>
 </RCC>

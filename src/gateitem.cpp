@@ -6,14 +6,14 @@
 #include <QGraphicsSceneMouseEvent>
 
 namespace {
-const QColor kGateFill("#2B2B2D");
-const QColor kGateBorder("#F1F1F1");
-const QColor kGateSelectedFill("#0A5A9C");
-const QColor kGateSelectedBorder("#FFFFFF");
-const QColor kGateConnectedBorder("#5CC6FF");
-const QColor kAnchorFill("#F1F1F1");
-const QColor kAnchorBorder("#1E1E1E");
-const QColor kGateText("#F1F1F1");
+const QColor kGateFill("#F0F0F0");
+const QColor kGateBorder("#ADADAD");
+const QColor kGateSelectedFill("#E5F1FB");
+const QColor kGateSelectedBorder("#0078D7");
+const QColor kGateConnectedBorder("#0078D7");
+const QColor kAnchorFill("#FFFFFF");
+const QColor kAnchorBorder("#000000");
+const QColor kGateText("#000000");
 }
 
 AnchorItem::AnchorItem(GateItem* parent, AnchorRole role)
@@ -68,8 +68,8 @@ QRectF GateItem::boundingRect() const {
 }
 
 static void drawNode(QPainter* painter, const QPointF& center) {
-    painter->setBrush(Qt::white);
-    painter->setPen(QPen(Qt::black, 1));
+    painter->setBrush(QColor("#0078D7"));
+    painter->setPen(QPen(QColor("#000000"), 1));
     painter->drawEllipse(center, 5, 5);
 }
 
@@ -271,7 +271,7 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         } else if (m_type == GateType::XOR) {
             path.moveTo(w * 0.15, 0);
             path.quadTo(w * 0.02, h / 2, w * 0.15, h);
-            painter->setPen(QPen(Qt::black, 1));
+            painter->setPen(QPen(kGateBorder, 1));
             painter->drawPath(path);
             path = QPainterPath();
             path.moveTo(w * 0.2, 0);
@@ -299,7 +299,7 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 void AnchorItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    const QColor fill = isSelected() ? QColor("#007ACC") : kAnchorFill;
+    const QColor fill = isSelected() ? QColor("#0078D7") : kAnchorFill;
     const QColor border = isSelected() ? QColor("#FFFFFF") : kAnchorBorder;
     painter->setBrush(fill);
     painter->setPen(QPen(border, isSelected() ? 2 : 1));

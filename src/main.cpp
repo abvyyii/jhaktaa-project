@@ -1,11 +1,51 @@
 #include <QApplication>
 #include <QFont>
+#include <QIcon>
+#include <QImage>
+#include <QPainter>
 #include <QPalette>
+#include <QPixmap>
 #include <QStyleFactory>
 
 #include "mainwindow.h"
 
 namespace {
+QIcon createAppIcon() {
+    QPixmap pixmap(QStringLiteral(":/logo.png"));
+    if (!pixmap.isNull()) {
+        QIcon icon;
+        for (const int size : {16, 24, 32, 48, 64, 128, 256}) {
+            icon.addPixmap(pixmap.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }
+        return icon;
+    }
+
+    QImage image(256, 256, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    painter.setBrush(QColor("#0078D7"));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(12, 12, 232, 232);
+
+    painter.setBrush(QColor("#FFFFFF"));
+    painter.drawRect(80, 80, 96, 96);
+
+    painter.setPen(QPen(QColor("#FFFFFF"), 12));
+    painter.drawLine(80, 128, 176, 128);
+    painter.drawLine(128, 80, 128, 176);
+    painter.end();
+
+    QIcon icon;
+    for (const int size : {16, 24, 32, 48, 64, 128, 256}) {
+        QImage scaled = image.scaled(size, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        icon.addPixmap(QPixmap::fromImage(scaled));
+    }
+    return icon;
+}
+
 QPalette buildDarkPalette() {
     QPalette palette;
     palette.setColor(QPalette::Window, QColor("#2D2D30"));
@@ -40,7 +80,11 @@ int main(int argc, char* argv[]) {
     app.setPalette(buildDarkPalette());
     app.setFont(QFont(QStringLiteral("Segoe UI"), 10));
 
+    const QIcon appIcon = createAppIcon();
+    app.setWindowIcon(appIcon);
+
     MainWindow window;
+    window.setWindowIcon(appIcon);
     window.setPalette(buildDarkPalette());
     window.show();
     return app.exec();
