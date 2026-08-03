@@ -18,6 +18,7 @@
 #include <QResizeEvent>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QPainter>
 
 namespace {
 const QColor kWindowColor(240, 240, 240);
@@ -62,6 +63,24 @@ QString findBackgroundGifPath() {
 
     return QString();
 }
+
+void applyRoundedBackdropMask(QWidget* widget, const QRect& rect) {
+    if (!widget || rect.isEmpty()) {
+        return;
+    }
+
+    QPixmap maskPixmap(rect.size());
+    maskPixmap.fill(Qt::transparent);
+
+    QPainter painter(&maskPixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setBrush(Qt::black);
+    painter.setPen(Qt::NoPen);
+    painter.drawRoundedRect(QRect(0, 0, rect.width(), rect.height()), 16, 16);
+    painter.end();
+
+    widget->setMask(maskPixmap.mask());
+}
 }
 
 RegisterWidget::RegisterWidget(QWidget* parent)
@@ -72,9 +91,7 @@ RegisterWidget::RegisterWidget(QWidget* parent)
       m_panelBackdrop(new QFrame(this)),
       m_accentBar(new QFrame(this)),
       m_brandBadge(new QLabel(this)),
-      m_bannerLeftBolt(new QLabel(QStringLiteral("⚡"), this)),
       m_bannerTitle(new QLabel(QStringLiteral("Jhatkaa"), this)),
-      m_bannerRightBolt(new QLabel(QStringLiteral("⚡"), this)),
       m_titleLabel(new QLabel("Create your account", this)),
       m_subtitleLabel(new QLabel("It only takes a few seconds to get started.", this)),
       m_messageLabel(new QLabel(this)),
@@ -121,7 +138,6 @@ void RegisterWidget::buildUi() {
 
     contentLayout->addStretch();
 
-    rootLayout->addWidget(m_backgroundLabel, 0, 0);
     rootLayout->addWidget(contentWidget, 0, 0);
     contentWidget->raise();
 
@@ -133,19 +149,6 @@ void RegisterWidget::buildUi() {
     accentPalette.setColor(QPalette::Window, kAccentColor);
     m_accentBar->setPalette(accentPalette);
     m_accentBar->setAutoFillBackground(true);
-
-    auto styleBolt = [](QLabel* label) {
-        QFont font = label->font();
-        font.setBold(true);
-        font.setPointSize(19);
-        label->setFont(font);
-        label->setAlignment(Qt::AlignCenter);
-        QPalette palette = label->palette();
-        palette.setColor(QPalette::WindowText, kSparkColor);
-        label->setPalette(palette);
-    };
-    styleBolt(m_bannerLeftBolt);
-    styleBolt(m_bannerRightBolt);
 
     QFont bannerFont = m_bannerTitle->font();
     bannerFont.setBold(true);
@@ -161,11 +164,9 @@ void RegisterWidget::buildUi() {
     panelLayout->setSpacing(12);
 
     auto* topBannerRow = new QHBoxLayout();
-    topBannerRow->setSpacing(10);
+    topBannerRow->setSpacing(0);
     topBannerRow->addStretch();
-    topBannerRow->addWidget(m_bannerLeftBolt);
-    topBannerRow->addWidget(m_bannerTitle);
-    topBannerRow->addWidget(m_bannerRightBolt);
+    topBannerRow->addWidget(m_bannerTitle, 0, Qt::AlignCenter);
     topBannerRow->addStretch();
 
     QPixmap logoPixmap(QStringLiteral(":/logo.png"));
@@ -223,8 +224,8 @@ void RegisterWidget::buildUi() {
     m_emailEdit->setPlaceholderText("Enter your email");
     m_passwordEdit->setPlaceholderText("Create a password");
     m_confirmPasswordEdit->setPlaceholderText("Repeat your password");
-    m_passwordToggleButton->setText(QStringLiteral("👁"));
-    m_confirmPasswordToggleButton->setText(QStringLiteral("👁"));
+    m_passwordToggleButton->setText(QStringLiteral("�"));
+    m_confirmPasswordToggleButton->setText(QStringLiteral("🙈"));
     m_passwordToggleButton->setToolTip("Show or hide password");
     m_confirmPasswordToggleButton->setToolTip("Show or hide password");
 
@@ -304,61 +305,40 @@ void RegisterWidget::applyBasePalette() {
     QFont font(QStringLiteral("Segoe UI"), 10);
     setFont(font);
     QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, kWindowColor);
+    palette.setColor(QPalette::Window, QColor(240, 240, 240));
+    palette.setColor(QPalette::Base, QColor(255, 255, 255));
+    palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
     setPalette(palette);
     setAutoFillBackground(true);
+    setStyleSheet(QStringLiteral("background: #f0f0f0;"));
 }
 
 void RegisterWidget::setupAnimatedBackground() {
-    m_backgroundLabel->show();
-    m_backgroundLabel->setAlignment(Qt::AlignCenter);
-    m_backgroundLabel->setScaledContents(true);
-    m_backgroundLabel->setStyleSheet(QStringLiteral("background: transparent;"));
-    m_backgroundLabel->setAutoFillBackground(false);
-
-    const QString backgroundPath = findBackgroundGifPath();
-    if (!backgroundPath.isEmpty()) {
-        m_backgroundMovie->setFileName(backgroundPath);
-        m_backgroundMovie->setCacheMode(QMovie::CacheAll);
-        m_backgroundMovie->setScaledSize(size());
-        m_backgroundLabel->setMovie(m_backgroundMovie);
-        m_backgroundMovie->start();
-    } else {
-        m_backgroundLabel->clear();
-    }
+    m_backgroundLabel->hide();
+    m_backgroundMovie->stop();
+    m_backgroundLabel->clear();
 }
 
 void RegisterWidget::stylePanel(QFrame* frame) {
     QPalette palette = frame->palette();
-    palette.setColor(QPalette::Window, kPanelColor);
-    palette.setColor(QPalette::WindowText, kPanelColor);
-    palette.setColor(QPalette::Dark, kPanelColor);
-    palette.setColor(QPalette::Shadow, kPanelColor);
+    palette.setColor(QPalette::Window, QColor(255, 255, 255));
+    palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
+    palette.setColor(QPalette::Dark, QColor(127, 127, 127));
+    palette.setColor(QPalette::Shadow, QColor(127, 127, 127));
     frame->setPalette(palette);
     frame->setAutoFillBackground(true);
-    frame->setAttribute(Qt::WA_TranslucentBackground);
-    frame->setFrameShape(QFrame::NoFrame);
-    frame->setFrameShadow(QFrame::Plain);
-    frame->setLineWidth(0);
-    frame->setStyleSheet(QStringLiteral("background: transparent;"));
+    frame->setAttribute(Qt::WA_TranslucentBackground, false);
+    frame->setFrameShape(QFrame::StyledPanel);
+    frame->setFrameShadow(QFrame::Sunken);
+    frame->setLineWidth(1);
+    frame->setStyleSheet(QStringLiteral("background: white; border: 1px solid #7f7f7f;"));
     frame->setMinimumWidth(460);
     frame->setMaximumWidth(560);
 }
 
 void RegisterWidget::stylePanelBackdrop(QFrame* backdrop, QFrame* host) {
-    backdrop->setParent(this);
-    backdrop->setGeometry(host->geometry());
-    backdrop->setAutoFillBackground(true);
-    backdrop->setAttribute(Qt::WA_TranslucentBackground);
-    backdrop->setFrameShape(QFrame::NoFrame);
-    backdrop->setFrameShadow(QFrame::Plain);
-    backdrop->setLineWidth(0);
-    backdrop->setStyleSheet(QStringLiteral("background-color: rgba(255, 255, 255, 0.60); border: 1px solid rgba(255, 255, 255, 0.95); border-radius: 16px;"));
-    auto* blurEffect = new QGraphicsBlurEffect(backdrop);
-    blurEffect->setBlurRadius(kBackgroundBlurRadius);
-    backdrop->setGraphicsEffect(blurEffect);
-    backdrop->lower();
-    backdrop->show();
+    Q_UNUSED(host);
+    backdrop->hide();
 }
 
 void RegisterWidget::styleLabel(QLabel* label, bool title) {
@@ -381,7 +361,7 @@ void RegisterWidget::styleLineEdit(QLineEdit* edit, bool secret) {
     palette.setColor(QPalette::PlaceholderText, QColor(110, 110, 110));
     edit->setPalette(palette);
     edit->setAutoFillBackground(true);
-    edit->setStyleSheet(QStringLiteral("border: 1px solid rgba(110, 110, 110, 0.45); border-radius: 8px; padding: 6px 8px;"));
+    edit->setStyleSheet(QStringLiteral("border: 1px solid #7f7f7f; background: white; padding: 6px 8px;"));
     edit->setMinimumHeight(32);
     edit->setClearButtonEnabled(true);
     if (secret) {
@@ -395,7 +375,7 @@ void RegisterWidget::stylePrimaryButton(QPushButton* button) {
     palette.setColor(QPalette::ButtonText, Qt::white);
     button->setPalette(palette);
     button->setAutoFillBackground(true);
-    button->setStyleSheet(QStringLiteral("QPushButton { background-color: rgba(59, 130, 246, 0.60); color: white; border: 1px solid rgba(59, 130, 246, 0.70); border-radius: 8px; padding: 6px 10px; } QPushButton:hover { background-color: rgba(59, 130, 246, 0.40); }"));
+    button->setStyleSheet(QStringLiteral("QPushButton { background-color: #f0f0f0; color: black; border: 1px solid #7f7f7f; padding: 6px 10px; } QPushButton:hover { background-color: #e5e5e5; }"));
     button->setMinimumHeight(36);
     button->setMinimumWidth(120);
 }
@@ -407,7 +387,7 @@ void RegisterWidget::styleLinkButton(QPushButton* button) {
     button->setPalette(palette);
     button->setFlat(true);
     button->setAutoFillBackground(false);
-    button->setStyleSheet(QStringLiteral("background: transparent; border: none; color: #2563EB; text-decoration: none;"));
+    button->setStyleSheet(QStringLiteral("background: transparent; border: none; color: #003399; text-decoration: underline;"));
 }
 
 void RegisterWidget::styleToggleButton(QToolButton* button) {
@@ -438,17 +418,18 @@ void RegisterWidget::resizeEvent(QResizeEvent* event) {
     updateAnimatedBackgroundSize();
     if (m_panelBackdrop && m_panel) {
         m_panelBackdrop->setGeometry(m_panel->geometry());
+        applyRoundedBackdropMask(m_panelBackdrop, m_panel->rect());
     }
 }
 
 void RegisterWidget::setPasswordVisibility(bool visible) {
     m_passwordEdit->setEchoMode(visible ? QLineEdit::Normal : QLineEdit::Password);
-    m_passwordToggleButton->setText(visible ? QStringLiteral("🙈") : QStringLiteral("👁"));
+    m_passwordToggleButton->setText(visible ? QStringLiteral("👁") : QStringLiteral(""));
 }
 
 void RegisterWidget::setConfirmPasswordVisibility(bool visible) {
     m_confirmPasswordEdit->setEchoMode(visible ? QLineEdit::Normal : QLineEdit::Password);
-    m_confirmPasswordToggleButton->setText(visible ? QStringLiteral("🙈") : QStringLiteral("👁"));
+    m_confirmPasswordToggleButton->setText(visible ? QStringLiteral("👁") : QStringLiteral(""));
 }
 
 void RegisterWidget::updateMessageAppearance(bool success) {
