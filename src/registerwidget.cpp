@@ -224,8 +224,8 @@ void RegisterWidget::buildUi() {
     m_emailEdit->setPlaceholderText("Enter your email");
     m_passwordEdit->setPlaceholderText("Create a password");
     m_confirmPasswordEdit->setPlaceholderText("Repeat your password");
-    m_passwordToggleButton->setText(QStringLiteral("�"));
-    m_confirmPasswordToggleButton->setText(QStringLiteral("🙈"));
+    m_passwordToggleButton->setText(QStringLiteral("👁"));
+    m_confirmPasswordToggleButton->setText(QStringLiteral("👁"));
     m_passwordToggleButton->setToolTip("Show or hide password");
     m_confirmPasswordToggleButton->setToolTip("Show or hide password");
 
