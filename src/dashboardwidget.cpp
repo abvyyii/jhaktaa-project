@@ -13,6 +13,7 @@
 #include <QMessageBox>
 #include <QPalette>
 #include <QPainter>
+#include <QPainterPath>
 #include <QPen>
 #include <QShortcut>
 #include <QSize>
@@ -616,8 +617,9 @@ void DashboardWidget::addSceneItem(const QString& type, const QPointF& scenePos)
         item = new GateItem(ItemKind::Gate, gateType);
     }
     item->setPos(scenePos);
-    item->setSelected(true);
+    m_scene->clearSelection();
     m_scene->addItem(item);
+    item->setSelected(true);
     connect(item, &GateItem::toggled, this, [this]() {
         refreshCircuit();
     });
@@ -634,6 +636,11 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
             refreshCircuit();
         });
     };
+
+    std::vector<GateItem*> prefabItems;
+    GateItem* selectedOutput = nullptr;
+
+    m_scene->clearSelection();
 
     if (kind == "HALF ADDER") {
         auto* inputA = new GateItem(ItemKind::InputSource);
@@ -657,6 +664,8 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addPrefabItem(sumOutput);
         addPrefabItem(carryOutput);
 
+        prefabItems = {inputA, inputB, xorGate, andGate, sumOutput, carryOutput};
+
         addConnection(inputA, xorGate, 0);
         addConnection(inputB, xorGate, 1);
         addConnection(inputA, andGate, 0);
@@ -664,7 +673,7 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addConnection(xorGate, sumOutput, 0);
         addConnection(andGate, carryOutput, 0);
 
-        m_selectedItem = sumOutput;
+        selectedOutput = sumOutput;
         m_statusLabel->setText("Added half adder");
     } else if (kind == "FULL ADDER") {
         auto* inputA = new GateItem(ItemKind::InputSource);
@@ -700,6 +709,8 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addPrefabItem(sumOutput);
         addPrefabItem(carryOutput);
 
+        prefabItems = {inputA, inputB, inputCin, xorGate1, xorGate2, andGate1, andGate2, orGate, sumOutput, carryOutput};
+
         addConnection(inputA, xorGate1, 0);
         addConnection(inputB, xorGate1, 1);
         addConnection(xorGate1, xorGate2, 0);
@@ -713,13 +724,22 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addConnection(xorGate2, sumOutput, 0);
         addConnection(orGate, carryOutput, 0);
 
-        m_selectedItem = sumOutput;
+        selectedOutput = sumOutput;
         m_statusLabel->setText("Added full adder");
     } else {
         m_statusLabel->setText("Unknown pre-built circuit");
         return;
     }
 
+    for (GateItem* item : prefabItems) {
+        if (item) {
+            item->setSelected(true);
+        }
+    }
+
+    if (selectedOutput) {
+        m_selectedItem = selectedOutput;
+    }
     refreshCircuit();
 }
 
@@ -841,15 +861,55 @@ void DashboardWidget::connectSelectedItems() {
 }
 
 QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
+    const QString normalized = type.trimmed().toUpper();
     QPixmap pixmap(size, size);
     pixmap.fill(Qt::transparent);
+
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setBrush(QColor("#FFFFFF"));
-    painter.setPen(QPen(QColor("#ADADAD"), 2));
-    painter.drawRoundedRect(4, 4, size - 8, size - 8, 8, 8);
-    painter.setPen(QColor("#000000"));
-    painter.drawText(pixmap.rect(), Qt::AlignCenter, type);
+
+    if (normalized == "INPUT") {
+        GateItem iconItem(ItemKind::InputSource);
+        painter.save();
+        painter.translate(2, 2);
+        painter.scale((size - 4) / 77.0, (size - 4) / 49.0);
+        iconItem.paint(&painter, nullptr, nullptr);
+        painter.restore();
+        return pixmap;
+    }
+
+    if (normalized == "OUTPUT") {
+        GateItem iconItem(ItemKind::OutputSink);
+        painter.save();
+        painter.translate(2, 2);
+        painter.scale((size - 4) / 77.0, (size - 4) / 49.0);
+        iconItem.paint(&painter, nullptr, nullptr);
+        painter.restore();
+        return pixmap;
+    }
+
+    if (normalized == "HALF ADDER" || normalized == "FULL ADDER") {
+        painter.setBrush(QColor("#000000"));
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(QPointF(size / 2.0, size / 2.0), 5.5, 5.5);
+        return pixmap;
+    }
+
+    GateType gateType = GateType::AND;
+    if (normalized == "OR") gateType = GateType::OR;
+    else if (normalized == "NOT") gateType = GateType::NOT;
+    else if (normalized == "XOR") gateType = GateType::XOR;
+    else if (normalized == "XNOR") gateType = GateType::XNOR;
+    else if (normalized == "NAND") gateType = GateType::NAND;
+    else if (normalized == "NOR") gateType = GateType::NOR;
+
+    GateItem iconItem(ItemKind::Gate, gateType);
+    painter.save();
+    painter.translate(2, 2);
+    painter.scale((size - 4) / 98.0, (size - 4) / 63.0);
+    iconItem.paint(&painter, nullptr, nullptr);
+    painter.restore();
+
     return pixmap;
 }
 

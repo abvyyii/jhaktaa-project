@@ -305,10 +305,10 @@ void LoginWidget::stylePanel(QFrame* frame) {
     frame->setPalette(palette);
     frame->setAutoFillBackground(true);
     frame->setAttribute(Qt::WA_TranslucentBackground, false);
-    frame->setFrameShape(QFrame::StyledPanel);
-    frame->setFrameShadow(QFrame::Sunken);
-    frame->setLineWidth(1);
-    frame->setStyleSheet(QStringLiteral("background: white; border: 1px solid #7f7f7f;"));
+    frame->setFrameShape(QFrame::NoFrame);
+    frame->setFrameShadow(QFrame::Plain);
+    frame->setLineWidth(0);
+    frame->setStyleSheet(QStringLiteral("background: white; border: none;"));
     frame->setMinimumWidth(460);
     frame->setMaximumWidth(560);
 }
