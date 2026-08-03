@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <QSettings>
 
 class QStackedWidget;
 class LoginWidget;
@@ -24,6 +25,9 @@ private slots:
 private:
     void applyWindowPalette();
     void setCurrentScreen(QWidget* screen);
+    void saveSession();
+    void restoreSession();
+    void clearSession();
 
 private:
     QStackedWidget* m_stack;

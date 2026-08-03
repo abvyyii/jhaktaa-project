@@ -1,0 +1,129 @@
+QWidget {
+    background-color: #2D2D30;
+    color: #F1F1F1;
+}
+
+QMainWindow, QDialog, QFrame, QDockWidget, QToolBar, QStatusBar {
+    background-color: #2D2D30;
+    color: #F1F1F1;
+}
+
+QLabel {
+    color: #F1F1F1;
+}
+
+QPushButton {
+    background-color: #3C3C3C;
+    color: #F1F1F1;
+    border: 1px solid #3F3F46;
+    border-radius: 4px;
+    padding: 6px 10px;
+}
+
+QPushButton:hover {
+    background-color: #4A4A4A;
+}
+
+QPushButton:pressed {
+    background-color: #007ACC;
+}
+
+QPushButton:disabled {
+    color: #7F7F7F;
+    background-color: #2F2F32;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+    background-color: #252526;
+    color: #F1F1F1;
+    border: 1px solid #3F3F46;
+    border-radius: 4px;
+    padding: 6px;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {
+    border: 1px solid #007ACC;
+}
+
+QListWidget, QTableWidget, QTreeWidget {
+    background-color: #252526;
+    color: #F1F1F1;
+    border: 1px solid #3F3F46;
+    outline: none;
+}
+
+QListWidget::item, QTableWidget::item, QTreeWidget::item {
+    padding: 6px;
+}
+
+QListWidget::item:hover, QTableWidget::item:hover, QTreeWidget::item:hover {
+    background-color: #3E3E42;
+}
+
+QListWidget::item:selected, QTableWidget::item:selected, QTreeWidget::item:selected {
+    background-color: #007ACC;
+    color: #FFFFFF;
+}
+
+QHeaderView::section {
+    background-color: #2F2F32;
+    color: #F1F1F1;
+    padding: 6px;
+    border: 1px solid #3F3F46;
+}
+
+QScrollBar:vertical, QScrollBar:horizontal {
+    background: #2D2D30;
+    border: none;
+}
+
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background: #4A4A4A;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background: #5A5A5E;
+}
+
+QGraphicsView {
+    background-color: #1E1E1E;
+    border: 1px solid #3F3F46;
+}
+
+QGraphicsView QFrame {
+    background-color: transparent;
+}
+
+QToolBar, QStatusBar {
+    background-color: #2D2D30;
+    border: 1px solid #3F3F46;
+}
+
+QDockWidget {
+    titlebar-close-icon: url();
+    titlebar-normal-icon: url();
+}
+
+QDockWidget::title {
+    background-color: #2F2F32;
+    color: #F1F1F1;
+    padding: 6px;
+    border: 1px solid #3F3F46;
+}
+
+QToolButton {
+    background-color: transparent;
+    color: #F1F1F1;
+    border: 1px solid #3F3F46;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+QToolButton:hover {
+    background-color: #3E3E42;
+}
+
+QToolButton:pressed, QToolButton:checked {
+    background-color: #007ACC;
+}

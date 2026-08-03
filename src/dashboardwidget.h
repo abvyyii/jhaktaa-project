@@ -58,6 +58,7 @@ private:
     bool addConnection(GateItem* source, GateItem* target, int inputSlot);
     void clearConnections();
     void addSceneItem(const QString& type, const QPointF& scenePos);
+    void addPrebuiltCircuit(const QString& type, const QPointF& scenePos);
     void removeItemWithConnections(GateItem* item);
     QPixmap createGateIcon(const QString& type, int size = 48);
     void applyDashboardPalette();
@@ -76,6 +77,7 @@ private:
     QPushButton* m_disconnectButton;
     QPushButton* m_deleteButton;
     QListWidget* m_gatePalette;
+    QListWidget* m_prebuiltPalette;
     QTableWidget* m_truthTable;
     std::vector<Connection> m_connections;
     bool m_refreshingCircuit;

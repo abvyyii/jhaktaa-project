@@ -20,9 +20,6 @@
 #include <QToolBar>
 #include <QWheelEvent>
 
-namespace {
-const QColor kWindowColor(240, 240, 240);
-}
 
 DashboardWidget::DashboardWidget(QWidget* parent)
     : QMainWindow(parent),
@@ -36,6 +33,7 @@ DashboardWidget::DashboardWidget(QWidget* parent)
       m_disconnectButton(new QPushButton("Disconnect wires", this)),
       m_deleteButton(new QPushButton("Delete", this)),
       m_gatePalette(new QListWidget(this)),
+      m_prebuiltPalette(new QListWidget(this)),
       m_truthTable(new QTableWidget(this)),
       m_refreshingCircuit(false),
       m_updatingSelection(false) {
@@ -50,12 +48,18 @@ DashboardWidget::DashboardWidget(QWidget* parent)
     m_gatePalette->setSelectionMode(QAbstractItemView::SingleSelection);
     m_gatePalette->setDragEnabled(true);
     m_gatePalette->setDragDropMode(QAbstractItemView::DragOnly);
+    m_prebuiltPalette->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_prebuiltPalette->setDragEnabled(true);
+    m_prebuiltPalette->setDragDropMode(QAbstractItemView::DragOnly);
 
     m_view->viewport()->setAcceptDrops(true);
     m_view->viewport()->installEventFilter(this);
 
     connect(m_gatePalette, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
         addSceneItem(item->text(), QPointF(100, 100));
+    });
+    connect(m_prebuiltPalette, &QListWidget::itemClicked, this, [this](QListWidgetItem* item) {
+        addPrebuiltCircuit(item->text(), QPointF(120, 140));
     });
     connect(m_connectButton, &QPushButton::clicked, this, &DashboardWidget::connectSelectedItems);
     connect(m_disconnectButton, &QPushButton::clicked, this, &DashboardWidget::disconnectSelectedConnections);
@@ -76,10 +80,7 @@ DashboardWidget::DashboardWidget(QWidget* parent)
 void DashboardWidget::applyDashboardPalette() {
     QFont font(QStringLiteral("Segoe UI"), 10);
     setFont(font);
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, kWindowColor);
-    setPalette(palette);
-    setAutoFillBackground(true);
+    setAutoFillBackground(false);
 }
 
 void DashboardWidget::createToolbar() {
@@ -92,19 +93,35 @@ void DashboardWidget::createCanvas() {
     auto* layout = new QHBoxLayout(content);
 
     auto* palettePanel = new QWidget(this);
+    palettePanel->setMinimumWidth(288);
     auto* paletteLayout = new QVBoxLayout(palettePanel);
     paletteLayout->addWidget(new QLabel("Drag items onto the canvas"));
     paletteLayout->addWidget(m_gatePalette);
+    paletteLayout->addSpacing(18);
+    paletteLayout->addWidget(new QLabel("Pre-built library"));
+    paletteLayout->addWidget(m_prebuiltPalette);
     paletteLayout->addStretch();
 
-    m_gatePalette->setFixedHeight(450);
+    m_gatePalette->setMinimumWidth(264);
+    m_gatePalette->setFixedHeight(460);
+    m_gatePalette->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_gatePalette->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_prebuiltPalette->setFixedHeight(150);
     m_gatePalette->setIconSize(QSize(48, 48));
+    m_prebuiltPalette->setIconSize(QSize(48, 48));
 
     const QStringList gateTypes = {"INPUT", "OUTPUT", "AND", "OR", "NOT", "XOR", "XNOR", "NAND", "NOR"};
     for (const QString& gateType : gateTypes) {
         auto* item = new QListWidgetItem(m_gatePalette);
         item->setText(gateType);
         item->setIcon(createGateIcon(gateType, 48));
+    }
+
+    const QStringList prebuiltTypes = {"HALF ADDER", "FULL ADDER"};
+    for (const QString& prebuiltType : prebuiltTypes) {
+        auto* item = new QListWidgetItem(m_prebuiltPalette);
+        item->setText(prebuiltType);
+        item->setIcon(createGateIcon(prebuiltType, 48));
     }
 
     m_view->setRenderHint(QPainter::Antialiasing);
@@ -267,7 +284,15 @@ void DashboardWidget::refreshTruthTable() {
 
     m_truthTable->clearContents();
     m_truthTable->setRowCount(0);
-    if (m_selectedItem->itemKind() == ItemKind::InputSource || m_selectedItem->itemKind() == ItemKind::OutputSink) {
+    if (m_selectedItem->itemKind() == ItemKind::InputSource) {
+        m_truthTable->setRowCount(2);
+        m_truthTable->setItem(0, 0, new QTableWidgetItem(""));
+        m_truthTable->setItem(0, 1, new QTableWidgetItem(""));
+        m_truthTable->setItem(0, 2, new QTableWidgetItem(m_selectedItem->output() ? "1" : "0"));
+        m_truthTable->setItem(1, 0, new QTableWidgetItem(""));
+        m_truthTable->setItem(1, 1, new QTableWidgetItem(""));
+        m_truthTable->setItem(1, 2, new QTableWidgetItem(m_selectedItem->isConnected() ? "Connected" : "Disconnected"));
+    } else if (m_selectedItem->itemKind() == ItemKind::OutputSink) {
         m_truthTable->setRowCount(2);
         m_truthTable->setItem(0, 0, new QTableWidgetItem(""));
         m_truthTable->setItem(0, 1, new QTableWidgetItem(""));
@@ -522,6 +547,103 @@ void DashboardWidget::addSceneItem(const QString& type, const QPointF& scenePos)
     m_statusLabel->setText(QString("Added %1").arg(type));
 }
 
+void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& scenePos) {
+    const QString kind = type.trimmed().toUpper();
+    auto addPrefabItem = [this](GateItem* item) {
+        m_scene->addItem(item);
+        connect(item, &GateItem::toggled, this, [this]() {
+            refreshCircuit();
+        });
+    };
+
+    if (kind == "HALF ADDER") {
+        auto* inputA = new GateItem(ItemKind::InputSource);
+        auto* inputB = new GateItem(ItemKind::InputSource);
+        auto* xorGate = new GateItem(ItemKind::Gate, GateType::XOR);
+        auto* andGate = new GateItem(ItemKind::Gate, GateType::AND);
+        auto* sumOutput = new GateItem(ItemKind::OutputSink);
+        auto* carryOutput = new GateItem(ItemKind::OutputSink);
+
+        inputA->setPos(scenePos + QPointF(0, 0));
+        inputB->setPos(scenePos + QPointF(0, 100));
+        xorGate->setPos(scenePos + QPointF(180, 0));
+        andGate->setPos(scenePos + QPointF(180, 100));
+        sumOutput->setPos(scenePos + QPointF(360, 0));
+        carryOutput->setPos(scenePos + QPointF(360, 100));
+
+        addPrefabItem(inputA);
+        addPrefabItem(inputB);
+        addPrefabItem(xorGate);
+        addPrefabItem(andGate);
+        addPrefabItem(sumOutput);
+        addPrefabItem(carryOutput);
+
+        addConnection(inputA, xorGate, 0);
+        addConnection(inputB, xorGate, 1);
+        addConnection(inputA, andGate, 0);
+        addConnection(inputB, andGate, 1);
+        addConnection(xorGate, sumOutput, 0);
+        addConnection(andGate, carryOutput, 0);
+
+        m_selectedItem = sumOutput;
+        m_statusLabel->setText("Added half adder");
+    } else if (kind == "FULL ADDER") {
+        auto* inputA = new GateItem(ItemKind::InputSource);
+        auto* inputB = new GateItem(ItemKind::InputSource);
+        auto* inputCin = new GateItem(ItemKind::InputSource);
+        auto* xorGate1 = new GateItem(ItemKind::Gate, GateType::XOR);
+        auto* xorGate2 = new GateItem(ItemKind::Gate, GateType::XOR);
+        auto* andGate1 = new GateItem(ItemKind::Gate, GateType::AND);
+        auto* andGate2 = new GateItem(ItemKind::Gate, GateType::AND);
+        auto* orGate = new GateItem(ItemKind::Gate, GateType::OR);
+        auto* sumOutput = new GateItem(ItemKind::OutputSink);
+        auto* carryOutput = new GateItem(ItemKind::OutputSink);
+
+        inputA->setPos(scenePos + QPointF(0, 0));
+        inputB->setPos(scenePos + QPointF(0, 90));
+        inputCin->setPos(scenePos + QPointF(0, 180));
+        xorGate1->setPos(scenePos + QPointF(180, 0));
+        xorGate2->setPos(scenePos + QPointF(360, 0));
+        andGate1->setPos(scenePos + QPointF(360, 90));
+        andGate2->setPos(scenePos + QPointF(360, 180));
+        orGate->setPos(scenePos + QPointF(540, 90));
+        sumOutput->setPos(scenePos + QPointF(720, 0));
+        carryOutput->setPos(scenePos + QPointF(720, 90));
+
+        addPrefabItem(inputA);
+        addPrefabItem(inputB);
+        addPrefabItem(inputCin);
+        addPrefabItem(xorGate1);
+        addPrefabItem(xorGate2);
+        addPrefabItem(andGate1);
+        addPrefabItem(andGate2);
+        addPrefabItem(orGate);
+        addPrefabItem(sumOutput);
+        addPrefabItem(carryOutput);
+
+        addConnection(inputA, xorGate1, 0);
+        addConnection(inputB, xorGate1, 1);
+        addConnection(xorGate1, xorGate2, 0);
+        addConnection(inputCin, xorGate2, 1);
+        addConnection(xorGate1, andGate1, 0);
+        addConnection(inputCin, andGate1, 1);
+        addConnection(inputA, andGate2, 0);
+        addConnection(inputB, andGate2, 1);
+        addConnection(andGate1, orGate, 0);
+        addConnection(andGate2, orGate, 1);
+        addConnection(xorGate2, sumOutput, 0);
+        addConnection(orGate, carryOutput, 0);
+
+        m_selectedItem = sumOutput;
+        m_statusLabel->setText("Added full adder");
+    } else {
+        m_statusLabel->setText("Unknown pre-built circuit");
+        return;
+    }
+
+    refreshCircuit();
+}
+
 void DashboardWidget::toggleInputA() {
     if (!m_selectedItem) {
         QMessageBox::information(this, "Jhatkaa", "Select an input item first.");
@@ -644,9 +766,10 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setBrush(QColor(245, 245, 245));
-    painter.setPen(QPen(Qt::black, 2));
+    painter.setBrush(QColor("#3C3C3C"));
+    painter.setPen(QPen(QColor("#4A4A4A"), 2));
     painter.drawRoundedRect(4, 4, size - 8, size - 8, 8, 8);
+    painter.setPen(QColor("#F1F1F1"));
     painter.drawText(pixmap.rect(), Qt::AlignCenter, type);
     return pixmap;
 }

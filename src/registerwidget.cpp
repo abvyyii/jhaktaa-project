@@ -11,11 +11,6 @@
 #include <QVBoxLayout>
 
 namespace {
-const QColor kWindowColor(240, 240, 240);
-const QColor kPanelColor(255, 255, 255);
-const QColor kBorderColor(60, 60, 60);
-const QColor kTextColor(28, 28, 28);
-const QColor kAccentColor(59, 130, 246);
 const QColor kErrorColor(185, 28, 28);
 const QColor kSuccessColor(22, 101, 52);
 }
@@ -165,23 +160,13 @@ void RegisterWidget::buildUi() {
 void RegisterWidget::applyBasePalette() {
     QFont font(QStringLiteral("Segoe UI"), 10);
     setFont(font);
-
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, kWindowColor);
-    setPalette(palette);
-    setAutoFillBackground(true);
+    setAutoFillBackground(false);
 }
 
 void RegisterWidget::stylePanel(QFrame* frame) {
-    QPalette palette = frame->palette();
-    palette.setColor(QPalette::Window, kPanelColor);
-    palette.setColor(QPalette::WindowText, kBorderColor);
-    palette.setColor(QPalette::Dark, kBorderColor);
-    palette.setColor(QPalette::Shadow, kBorderColor);
-    frame->setPalette(palette);
-    frame->setAutoFillBackground(true);
-    frame->setFrameShape(QFrame::Box);
-    frame->setFrameShadow(QFrame::Plain);
+    frame->setAutoFillBackground(false);
+    frame->setFrameShape(QFrame::StyledPanel);
+    frame->setFrameShadow(QFrame::Raised);
     frame->setLineWidth(1);
     frame->setMinimumWidth(440);
     frame->setMaximumWidth(520);
@@ -193,19 +178,10 @@ void RegisterWidget::styleLabel(QLabel* label, bool title) {
     font.setPointSize(title ? 17 : 10);
     label->setFont(font);
     label->setAlignment(Qt::AlignLeft);
-    QPalette palette = label->palette();
-    palette.setColor(QPalette::WindowText, kTextColor);
-    label->setPalette(palette);
 }
 
 void RegisterWidget::styleLineEdit(QLineEdit* edit, bool secret) {
-    QPalette palette = edit->palette();
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Window, Qt::white);
-    palette.setColor(QPalette::Text, kTextColor);
-    palette.setColor(QPalette::PlaceholderText, QColor(110, 110, 110));
-    edit->setPalette(palette);
-    edit->setAutoFillBackground(true);
+    edit->setAutoFillBackground(false);
     edit->setMinimumHeight(32);
     edit->setClearButtonEnabled(true);
     if (secret) {
@@ -214,28 +190,17 @@ void RegisterWidget::styleLineEdit(QLineEdit* edit, bool secret) {
 }
 
 void RegisterWidget::stylePrimaryButton(QPushButton* button) {
-    QPalette palette = button->palette();
-    palette.setColor(QPalette::Button, kAccentColor);
-    palette.setColor(QPalette::ButtonText, Qt::white);
-    button->setPalette(palette);
-    button->setAutoFillBackground(true);
+    button->setAutoFillBackground(false);
     button->setMinimumHeight(36);
     button->setMinimumWidth(120);
 }
 
 void RegisterWidget::styleLinkButton(QPushButton* button) {
-    QPalette palette = button->palette();
-    palette.setColor(QPalette::ButtonText, kAccentColor);
-    button->setPalette(palette);
     button->setFlat(true);
 }
 
 void RegisterWidget::styleToggleButton(QToolButton* button) {
-    QPalette palette = button->palette();
-    palette.setColor(QPalette::Button, QColor(240, 232, 219));
-    palette.setColor(QPalette::ButtonText, kTextColor);
-    button->setPalette(palette);
-    button->setAutoFillBackground(true);
+    button->setAutoFillBackground(false);
     button->setCheckable(true);
     button->setAutoRaise(true);
     button->setCursor(Qt::PointingHandCursor);

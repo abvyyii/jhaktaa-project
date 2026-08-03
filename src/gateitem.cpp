@@ -5,11 +5,22 @@
 #include <QPen>
 #include <QGraphicsSceneMouseEvent>
 
+namespace {
+const QColor kGateFill("#2B2B2D");
+const QColor kGateBorder("#F1F1F1");
+const QColor kGateSelectedFill("#0A5A9C");
+const QColor kGateSelectedBorder("#FFFFFF");
+const QColor kGateConnectedBorder("#5CC6FF");
+const QColor kAnchorFill("#F1F1F1");
+const QColor kAnchorBorder("#1E1E1E");
+const QColor kGateText("#F1F1F1");
+}
+
 AnchorItem::AnchorItem(GateItem* parent, AnchorRole role)
     : QGraphicsEllipseItem(), m_parent(parent), m_role(role) {
     setRect(-5, -5, 10, 10);
-    setBrush(Qt::white);
-    setPen(QPen(Qt::black, 1));
+    setBrush(kAnchorFill);
+    setPen(QPen(kAnchorBorder, 1));
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemIsMovable, false);
     setAcceptHoverEvents(true);
@@ -226,19 +237,19 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         return;
     }
 
-    const QColor fill = isSelected() ? QColor(200, 230, 255) : QColor(245, 245, 245);
-    const QColor border = m_connected ? QColor(34, 139, 34) : Qt::black;
+    const QColor fill = isSelected() ? kGateSelectedFill : kGateFill;
+    const QColor border = m_connected ? kGateConnectedBorder : (isSelected() ? kGateSelectedBorder : kGateBorder);
     painter->setPen(QPen(border, m_connected ? 3 : 2));
     painter->setBrush(fill);
 
     if (m_kind == ItemKind::InputSource) {
         painter->drawRoundedRect(m_rect, 10, 10);
-        painter->setPen(Qt::black);
+        painter->setPen(kGateText);
         painter->drawText(QRectF(0, 0, m_rect.width(), m_rect.height()), Qt::AlignCenter,
                          QString("INPUT\n%1").arg(m_output ? "1" : "0"));
     } else if (m_kind == ItemKind::OutputSink) {
         painter->drawRoundedRect(m_rect, 10, 10);
-        painter->setPen(Qt::black);
+        painter->setPen(kGateText);
         painter->drawText(QRectF(0, 0, m_rect.width(), m_rect.height()), Qt::AlignCenter,
                          QString("OUTPUT\n%1").arg(m_output ? "1" : "0"));
     } else {
@@ -277,10 +288,10 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         }
         painter->drawPath(path);
         if (m_type == GateType::NAND || m_type == GateType::XNOR || m_type == GateType::NOR || m_type == GateType::NOT) {
-            painter->setBrush(Qt::white);
+            painter->setBrush(kGateFill);
             painter->drawEllipse(QPointF(w - 12, h / 2), 8, 8);
         }
-        painter->setPen(Qt::black);
+        painter->setPen(kGateText);
         painter->drawText(QRectF(0, 0, w, h), Qt::AlignCenter, QString::fromStdString(LogicEngine::gateName(m_type)));
     }
 }
@@ -288,8 +299,8 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 void AnchorItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
     Q_UNUSED(option);
     Q_UNUSED(widget);
-    const QColor fill = isSelected() ? QColor(255, 215, 0) : QColor(255, 255, 255);
-    const QColor border = isSelected() ? QColor(255, 140, 0) : QColor(0, 0, 0);
+    const QColor fill = isSelected() ? QColor("#007ACC") : kAnchorFill;
+    const QColor border = isSelected() ? QColor("#FFFFFF") : kAnchorBorder;
     painter->setBrush(fill);
     painter->setPen(QPen(border, isSelected() ? 2 : 1));
     painter->drawEllipse(rect());

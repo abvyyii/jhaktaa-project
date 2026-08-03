@@ -21,6 +21,7 @@ set(HEADERS
 add_executable(jhatkaa
     ${SOURCES}
     ${HEADERS}
+    ../resources/resources.qrc
 )
 
 target_include_directories(jhatkaa PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

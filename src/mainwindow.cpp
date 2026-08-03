@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QPalette>
+#include <QSettings>
 #include <QStackedWidget>
 
 #include "dashboardwidget.h"
@@ -9,8 +10,6 @@
 #include "registerwidget.h"
 
 namespace {
-const QColor kWindowColor(240, 240, 240);
-
 bool passwordMeetsPolicy(const QString& password) {
     bool hasUpper = false;
     bool hasLower = false;
@@ -67,14 +66,11 @@ MainWindow::MainWindow(QWidget* parent)
         m_registerWidget->setFormEnabled(false);
     }
 
-    showLoginScreen();
+    restoreSession();
 }
 
 void MainWindow::applyWindowPalette() {
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, kWindowColor);
-    setPalette(palette);
-    setAutoFillBackground(true);
+    setAutoFillBackground(false);
 }
 
 void MainWindow::setCurrentScreen(QWidget* screen) {
@@ -85,6 +81,42 @@ void MainWindow::setCurrentScreen(QWidget* screen) {
 
 void MainWindow::showLoginScreen() {
     setCurrentScreen(m_loginWidget);
+}
+
+void MainWindow::saveSession() {
+    if (!m_databaseReady) {
+        return;
+    }
+
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Jhatkaa", "session");
+    settings.setValue("logged_in", !m_loggedInUsername.isEmpty());
+    settings.setValue("username", m_loggedInUsername);
+}
+
+void MainWindow::restoreSession() {
+    if (!m_databaseReady) {
+        showLoginScreen();
+        return;
+    }
+
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Jhatkaa", "session");
+    const bool loggedIn = settings.value("logged_in", false).toBool();
+    const QString savedUsername = settings.value("username", QString()).toString();
+
+    if (loggedIn && !savedUsername.isEmpty()) {
+        m_loggedInUsername = savedUsername;
+        m_dashboardWidget->setUsername(m_loggedInUsername);
+        setCurrentScreen(m_dashboardWidget);
+        return;
+    }
+
+    showLoginScreen();
+}
+
+void MainWindow::clearSession() {
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Jhatkaa", "session");
+    settings.remove("logged_in");
+    settings.remove("username");
 }
 
 void MainWindow::showRegisterScreen() {
@@ -108,6 +140,7 @@ void MainWindow::handleLoginRequested(const QString& identifier, const QString& 
     m_dashboardWidget->setUsername(m_loggedInUsername);
     m_loginWidget->clearFields();
     m_loginWidget->clearMessage();
+    saveSession();
     setCurrentScreen(m_dashboardWidget);
 }
 
@@ -174,5 +207,6 @@ void MainWindow::handleLogoutRequested() {
     m_loggedInUsername.clear();
     m_dashboardWidget->setUsername(QString());
     m_loginWidget->clearMessage();
+    clearSession();
     showLoginScreen();
 }
