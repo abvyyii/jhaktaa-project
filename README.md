@@ -19,6 +19,7 @@ Digital logic gate simulator built with Qt and CMake.
 1. Open a terminal with Qt environment available.
    - If using Visual Studio, use `x64 Native Tools Command Prompt` and make sure Qt is installed for MSVC.
    - If using MSYS2, open the MSYS2 MinGW shell and install Qt and Ninja.
+   Using the UCRT64 terminal is recommended
 
 2. Configure and generate the build files:
 
