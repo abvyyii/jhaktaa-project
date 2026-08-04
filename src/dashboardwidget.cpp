@@ -360,6 +360,58 @@ void DashboardWidget::refreshTruthTable() {
 
     m_truthTable->clearContents();
     m_truthTable->setRowCount(0);
+
+    if (m_selectedItem->circuitType() == CircuitType::HalfAdder) {
+        m_truthTable->setColumnCount(4);
+        m_truthTable->setHorizontalHeaderLabels({"A", "B", "Sum", "Carry"});
+        m_truthTable->setRowCount(4);
+        const bool rows[4][2] = {{false, false}, {false, true}, {true, false}, {true, true}};
+        for (int row = 0; row < 4; ++row) {
+            const bool a = rows[row][0];
+            const bool b = rows[row][1];
+            const bool sum = LogicEngine::evaluateGate(GateType::XOR, a, b);
+            const bool carry = LogicEngine::evaluateGate(GateType::AND, a, b);
+            m_truthTable->setItem(row, 0, new QTableWidgetItem(a ? "1" : "0"));
+            m_truthTable->setItem(row, 1, new QTableWidgetItem(b ? "1" : "0"));
+            m_truthTable->setItem(row, 2, new QTableWidgetItem(sum ? "1" : "0"));
+            m_truthTable->setItem(row, 3, new QTableWidgetItem(carry ? "1" : "0"));
+        }
+        m_truthTable->resizeColumnsToContents();
+        return;
+    }
+
+    if (m_selectedItem->circuitType() == CircuitType::FullAdder) {
+        m_truthTable->setColumnCount(5);
+        m_truthTable->setHorizontalHeaderLabels({"A", "B", "C", "Sum", "Carry"});
+        m_truthTable->setRowCount(8);
+        const bool rows[8][3] = {
+            {false, false, false},
+            {false, false, true},
+            {false, true, false},
+            {false, true, true},
+            {true, false, false},
+            {true, false, true},
+            {true, true, false},
+            {true, true, true}
+        };
+        for (int row = 0; row < 8; ++row) {
+            const bool a = rows[row][0];
+            const bool b = rows[row][1];
+            const bool c = rows[row][2];
+            const bool sum = LogicEngine::evaluateGate(GateType::XOR, LogicEngine::evaluateGate(GateType::XOR, a, b), c);
+            const bool carry = LogicEngine::evaluateGate(GateType::OR,
+                LogicEngine::evaluateGate(GateType::AND, a, b),
+                LogicEngine::evaluateGate(GateType::AND, LogicEngine::evaluateGate(GateType::XOR, a, b), c));
+            m_truthTable->setItem(row, 0, new QTableWidgetItem(a ? "1" : "0"));
+            m_truthTable->setItem(row, 1, new QTableWidgetItem(b ? "1" : "0"));
+            m_truthTable->setItem(row, 2, new QTableWidgetItem(c ? "1" : "0"));
+            m_truthTable->setItem(row, 3, new QTableWidgetItem(sum ? "1" : "0"));
+            m_truthTable->setItem(row, 4, new QTableWidgetItem(carry ? "1" : "0"));
+        }
+        m_truthTable->resizeColumnsToContents();
+        return;
+    }
+
     if (m_selectedItem->itemKind() == ItemKind::InputSource) {
         m_truthTable->setRowCount(2);
         m_truthTable->setItem(0, 0, new QTableWidgetItem(""));
@@ -661,6 +713,11 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addPrefabItem(carryOutput);
 
         prefabItems = {inputA, inputB, xorGate, andGate, sumOutput, carryOutput};
+        for (GateItem* item : prefabItems) {
+            if (item) {
+                item->setCircuitType(CircuitType::HalfAdder);
+            }
+        }
 
         addConnection(inputA, xorGate, 0);
         addConnection(inputB, xorGate, 1);
@@ -706,6 +763,11 @@ void DashboardWidget::addPrebuiltCircuit(const QString& type, const QPointF& sce
         addPrefabItem(carryOutput);
 
         prefabItems = {inputA, inputB, inputCin, xorGate1, xorGate2, andGate1, andGate2, orGate, sumOutput, carryOutput};
+        for (GateItem* item : prefabItems) {
+            if (item) {
+                item->setCircuitType(CircuitType::FullAdder);
+            }
+        }
 
         addConnection(inputA, xorGate1, 0);
         addConnection(inputB, xorGate1, 1);

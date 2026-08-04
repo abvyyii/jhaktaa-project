@@ -17,6 +17,12 @@ enum class ItemKind {
     OutputSink
 };
 
+enum class CircuitType {
+    None,
+    HalfAdder,
+    FullAdder
+};
+
 class GateItem;
 
 class AnchorItem : public QGraphicsEllipseItem {
@@ -52,6 +58,8 @@ public:
     GateType gateType() const;
     bool output() const;
     void setShowLabel(bool show);
+    void setCircuitType(CircuitType type);
+    CircuitType circuitType() const;
     void toggleValue();
     void setInputA(bool value);
     void setInputB(bool value);
@@ -94,6 +102,7 @@ private:
     bool m_connected;
     bool m_togglePending;
     bool m_showLabel;
+    CircuitType m_circuitType;
     QRectF m_rect;
     QPointer<GateItem> m_inputSourceA;
     QPointer<GateItem> m_inputSourceB;

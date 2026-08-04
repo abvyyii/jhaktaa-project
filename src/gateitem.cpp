@@ -43,7 +43,7 @@ int AnchorItem::inputSlot() const {
 
 GateItem::GateItem(ItemKind kind, GateType type, QGraphicsItem* parent)
     : QGraphicsObject(parent), m_kind(kind), m_type(type), m_value(false), m_inputA(false), m_inputB(false), m_output(false), m_connected(false), m_togglePending(false),
-      m_showLabel(true), m_rect(kind == ItemKind::Gate ? QRectF(0, 0, 98, 63) : QRectF(0, 0, 77, 49)), m_inputSourceA(nullptr), m_inputSourceB(nullptr),
+      m_showLabel(true), m_circuitType(CircuitType::None), m_rect(kind == ItemKind::Gate ? QRectF(0, 0, 98, 63) : QRectF(0, 0, 77, 49)), m_inputSourceA(nullptr), m_inputSourceB(nullptr),
       m_inputAnchorA(nullptr), m_inputAnchorB(nullptr), m_outputAnchor(nullptr) {
     setFlags(ItemIsMovable | ItemIsSelectable);
     setAcceptHoverEvents(true);
@@ -88,6 +88,14 @@ bool GateItem::output() const {
 
 void GateItem::setShowLabel(bool show) {
     m_showLabel = show;
+}
+
+void GateItem::setCircuitType(CircuitType type) {
+    m_circuitType = type;
+}
+
+CircuitType GateItem::circuitType() const {
+    return m_circuitType;
 }
 
 void GateItem::toggleValue() {
