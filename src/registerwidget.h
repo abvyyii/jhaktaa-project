@@ -47,7 +47,6 @@ protected:
 
 private:
     QLabel* m_backgroundLabel;
-    QMovie* m_backgroundMovie;
     QFrame* m_panel;
     QFrame* m_panelBackdrop;
     QFrame* m_accentBar;

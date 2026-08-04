@@ -224,11 +224,7 @@ void DashboardWidget::createInspector() {
 
     auto* clearButton = new QPushButton("Clear", this);
     connect(clearButton, &QPushButton::clicked, this, [this]() {
-        clearConnections();
-        m_scene->clear();
-        m_selectedItem = nullptr;
-        m_statusLabel->setText("Canvas cleared");
-        refreshTruthTable();
+        clearCanvas();
     });
 
     inspectorLayout->addWidget(new QLabel("Selected item controls"));
@@ -784,7 +780,26 @@ void DashboardWidget::updateSelectedGate() {
         m_selectedItem = nullptr;
     }
 
+    if (selectedAnchors.isEmpty()) {
+        m_pendingConnectionAnchors.clear();
+    } else {
+        for (AnchorItem* anchor : selectedAnchors) {
+            if (!anchor) {
+                continue;
+            }
+
+            const auto it = std::find(m_pendingConnectionAnchors.begin(), m_pendingConnectionAnchors.end(), anchor);
+            if (it == m_pendingConnectionAnchors.end()) {
+                m_pendingConnectionAnchors.push_back(anchor);
+            }
+            if (m_pendingConnectionAnchors.size() > 2) {
+                m_pendingConnectionAnchors.erase(m_pendingConnectionAnchors.begin());
+            }
+        }
+    }
+
     const int selectedAnchorCount = selectedAnchors.size();
+    const int pendingAnchorCount = static_cast<int>(m_pendingConnectionAnchors.size());
     const int selectedGateCount = selectedGates.size();
     if (selectedAnchorCount == 1 && m_selectedItem) {
         const QString label = m_selectedItem->itemKind() == ItemKind::Gate
@@ -792,8 +807,10 @@ void DashboardWidget::updateSelectedGate() {
             : (m_selectedItem->itemKind() == ItemKind::InputSource ? "INPUT" : "OUTPUT");
         const QString connectionState = m_selectedItem->isConnected() ? "connected" : "disconnected";
         m_statusLabel->setText(QString("Selected connection node on %1 (%2)").arg(label, connectionState));
-    } else if (selectedAnchorCount == 2) {
+    } else if (pendingAnchorCount == 2) {
         m_statusLabel->setText("Two connection nodes selected. Press Connect selected to wire them.");
+    } else if (selectedGateCount == 2) {
+        m_statusLabel->setText("Two items selected. Press Connect selected to wire them.");
     } else if (selectedGateCount == 1 && m_selectedItem) {
         const QString label = m_selectedItem->itemKind() == ItemKind::Gate
             ? QString::fromStdString(LogicEngine::gateName(m_selectedItem->gateType()))
@@ -805,7 +822,7 @@ void DashboardWidget::updateSelectedGate() {
         m_statusLabel->setText("Drag inputs, gates, or outputs from the palette");
     }
 
-    m_connectButton->setEnabled(selectedAnchorCount == 2);
+    m_connectButton->setEnabled(pendingAnchorCount >= 2 || selectedGateCount == 2);
     m_disconnectButton->setEnabled(m_selectedItem != nullptr);
     m_deleteButton->setEnabled(m_selectedItem != nullptr);
 
@@ -814,50 +831,98 @@ void DashboardWidget::updateSelectedGate() {
 }
 
 void DashboardWidget::connectSelectedItems() {
-    const QList<QGraphicsItem*> selectedItems = m_scene->selectedItems();
     QList<AnchorItem*> selectedAnchors;
-    for (QGraphicsItem* item : selectedItems) {
-        if (auto* anchor = qgraphicsitem_cast<AnchorItem*>(item)) {
-            selectedAnchors.append(anchor);
+    QList<GateItem*> selectedGates;
+    if (m_pendingConnectionAnchors.size() >= 2) {
+        for (AnchorItem* anchor : m_pendingConnectionAnchors) {
+            if (anchor) {
+                selectedAnchors.append(anchor);
+            }
+        }
+    } else {
+        const QList<QGraphicsItem*> selectedItems = m_scene->selectedItems();
+        for (QGraphicsItem* item : selectedItems) {
+            if (auto* anchor = qgraphicsitem_cast<AnchorItem*>(item)) {
+                selectedAnchors.append(anchor);
+            } else if (auto* gate = qgraphicsitem_cast<GateItem*>(item)) {
+                selectedGates.append(gate);
+            }
         }
     }
 
-    if (selectedAnchors.size() != 2) {
-        m_statusLabel->setText("Select two anchors to connect.");
+    if (selectedAnchors.size() == 2) {
+        AnchorItem* first = selectedAnchors.at(0);
+        AnchorItem* second = selectedAnchors.at(1);
+        GateItem* firstGate = first->gate();
+        GateItem* secondGate = second->gate();
+
+        if (!firstGate || !secondGate || firstGate == secondGate) {
+            m_statusLabel->setText("Choose two different items.");
+            return;
+        }
+
+        AnchorItem* sourceAnchor = nullptr;
+        AnchorItem* targetAnchor = nullptr;
+        if (first->role() == AnchorItem::AnchorRole::Output && second->role() != AnchorItem::AnchorRole::Output) {
+            sourceAnchor = first;
+            targetAnchor = second;
+        } else if (second->role() == AnchorItem::AnchorRole::Output && first->role() != AnchorItem::AnchorRole::Output) {
+            sourceAnchor = second;
+            targetAnchor = first;
+        } else {
+            m_statusLabel->setText("Connect an output anchor to an input anchor.");
+            return;
+        }
+
+        const int inputSlot = targetAnchor->inputSlot();
+        if (!addConnection(sourceAnchor->gate(), targetAnchor->gate(), inputSlot)) {
+            return;
+        }
+
+        sourceAnchor->setSelected(false);
+        targetAnchor->setSelected(false);
+        m_scene->clearSelection();
+        m_pendingConnectionAnchors.clear();
         return;
     }
 
-    AnchorItem* first = selectedAnchors.at(0);
-    AnchorItem* second = selectedAnchors.at(1);
-    GateItem* firstGate = first->gate();
-    GateItem* secondGate = second->gate();
+    if (selectedGates.size() == 2) {
+        GateItem* sourceGate = selectedGates.at(0);
+        GateItem* targetGate = selectedGates.at(1);
 
-    if (!firstGate || !secondGate || firstGate == secondGate) {
-        m_statusLabel->setText("Choose two different items.");
+        if (!sourceGate || !targetGate || sourceGate == targetGate) {
+            m_statusLabel->setText("Choose two different items.");
+            return;
+        }
+
+        if (sourceGate->itemKind() == ItemKind::OutputSink) {
+            std::swap(sourceGate, targetGate);
+        }
+
+        if (targetGate->itemKind() == ItemKind::InputSource || targetGate->itemKind() == ItemKind::OutputSink) {
+            m_statusLabel->setText("Select a gate or input as the source and a gate as the target.");
+            return;
+        }
+
+        int inputSlot = 0;
+        if (targetGate->gateType() == GateType::NOT) {
+            inputSlot = 0;
+        } else if (targetGate->hasInputSource(0)) {
+            inputSlot = 1;
+        } else if (targetGate->hasInputSource(1)) {
+            inputSlot = 0;
+        }
+
+        if (!addConnection(sourceGate, targetGate, inputSlot)) {
+            return;
+        }
+
+        m_scene->clearSelection();
+        m_pendingConnectionAnchors.clear();
         return;
     }
 
-    AnchorItem* sourceAnchor = nullptr;
-    AnchorItem* targetAnchor = nullptr;
-    if (first->role() == AnchorItem::AnchorRole::Output && second->role() != AnchorItem::AnchorRole::Output) {
-        sourceAnchor = first;
-        targetAnchor = second;
-    } else if (second->role() == AnchorItem::AnchorRole::Output && first->role() != AnchorItem::AnchorRole::Output) {
-        sourceAnchor = second;
-        targetAnchor = first;
-    } else {
-        m_statusLabel->setText("Connect an output anchor to an input anchor.");
-        return;
-    }
-
-    const int inputSlot = targetAnchor->inputSlot();
-    if (!addConnection(sourceAnchor->gate(), targetAnchor->gate(), inputSlot)) {
-        return;
-    }
-
-    sourceAnchor->setSelected(false);
-    targetAnchor->setSelected(false);
-    m_scene->clearSelection();
+    m_statusLabel->setText("Select two anchors or two gates to connect.");
 }
 
 QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
@@ -911,6 +976,14 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
     painter.restore();
 
     return pixmap;
+}
+
+void DashboardWidget::clearCanvas() {
+    clearConnections();
+    m_scene->clear();
+    m_selectedItem = nullptr;
+    m_statusLabel->setText("Canvas cleared");
+    refreshTruthTable();
 }
 
 void DashboardWidget::handleLogoutAction() {

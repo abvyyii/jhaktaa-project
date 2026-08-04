@@ -18,6 +18,7 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <vector>
+#include <algorithm>
 
 #include "gateitem.h"
 
@@ -35,6 +36,7 @@ public:
     explicit DashboardWidget(QWidget* parent = nullptr);
 
     void setUsername(const QString& username);
+    void clearCanvas();
 
 signals:
     void logoutRequested();
@@ -80,6 +82,7 @@ private:
     QListWidget* m_prebuiltPalette;
     QTableWidget* m_truthTable;
     std::vector<Connection> m_connections;
+    std::vector<AnchorItem*> m_pendingConnectionAnchors;
     bool m_refreshingCircuit;
     bool m_updatingSelection;
 };

@@ -6,7 +6,6 @@
 class QFrame;
 class QLabel;
 class QLineEdit;
-class QMovie;
 class QGraphicsOpacityEffect;
 class QPropertyAnimation;
 class QPushButton;
@@ -45,7 +44,6 @@ protected:
 
 private:
     QLabel* m_backgroundLabel;
-    QMovie* m_backgroundMovie;
     QGraphicsOpacityEffect* m_backgroundOpacityEffect;
     QPropertyAnimation* m_backgroundFadeAnimation;
     QFrame* m_panel;

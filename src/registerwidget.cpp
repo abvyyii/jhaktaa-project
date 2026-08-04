@@ -1,9 +1,5 @@
 #include "registerwidget.h"
 
-#include <QCoreApplication>
-#include <QDir>
-#include <QFile>
-#include <QFileInfo>
 #include <QFrame>
 #include <QGraphicsBlurEffect>
 #include <QGridLayout>
@@ -11,7 +7,6 @@
 #include <QFont>
 #include <QLabel>
 #include <QLineEdit>
-#include <QMovie>
 #include <QPalette>
 #include <QPixmap>
 #include <QPushButton>
@@ -30,39 +25,6 @@ const QColor kSparkColor(79, 70, 229);
 const QColor kTextColor(28, 28, 28);
 const QColor kAccentColor(59, 130, 246);
 constexpr int kBackgroundBlurRadius = 24;
-
-QString findBackgroundGifPath() {
-    if (QFile::exists(QStringLiteral(":/bg_ref.gif"))) {
-        return QStringLiteral(":/bg_ref.gif");
-    }
-
-    const QStringList searchRoots = {
-        QDir::currentPath(),
-        QCoreApplication::applicationDirPath(),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/.."),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../.."),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../../..")
-    };
-
-    QStringList candidates;
-    for (const QString& root : searchRoots) {
-        if (root.isEmpty()) {
-            continue;
-        }
-        candidates << QDir::cleanPath(root + "/bg_ref.gif");
-        candidates << QDir::cleanPath(root + "/bg_ref.GIF");
-    }
-    candidates << QStringLiteral("bg_ref.gif");
-    candidates << QStringLiteral("bg_ref.GIF");
-
-    for (const QString& candidate : candidates) {
-        if (!candidate.isEmpty() && QFileInfo::exists(candidate) && QFileInfo(candidate).isFile()) {
-            return candidate;
-        }
-    }
-
-    return QString();
-}
 
 void applyRoundedBackdropMask(QWidget* widget, const QRect& rect) {
     if (!widget || rect.isEmpty()) {
@@ -86,7 +48,6 @@ void applyRoundedBackdropMask(QWidget* widget, const QRect& rect) {
 RegisterWidget::RegisterWidget(QWidget* parent)
     : QWidget(parent),
       m_backgroundLabel(new QLabel(this)),
-      m_backgroundMovie(new QMovie(this)),
       m_panel(new QFrame(this)),
       m_panelBackdrop(new QFrame(this)),
       m_accentBar(new QFrame(this)),
@@ -315,7 +276,6 @@ void RegisterWidget::applyBasePalette() {
 
 void RegisterWidget::setupAnimatedBackground() {
     m_backgroundLabel->hide();
-    m_backgroundMovie->stop();
     m_backgroundLabel->clear();
 }
 
@@ -402,10 +362,6 @@ void RegisterWidget::styleToggleButton(QToolButton* button) {
 }
 
 void RegisterWidget::updateAnimatedBackgroundSize() {
-    if (m_backgroundMovie->isValid()) {
-        m_backgroundMovie->setScaledSize(size());
-    }
-
     const QPixmap currentPixmap = m_backgroundLabel->pixmap(Qt::ReturnByValue);
     if (!currentPixmap.isNull()) {
         m_backgroundLabel->setPixmap(currentPixmap.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));

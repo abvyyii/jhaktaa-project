@@ -522,6 +522,7 @@ void MainWindow::handleRegisterRequested(const QString& username, const QString&
 void MainWindow::handleLogoutRequested() {
     m_loggedInUsername.clear();
     m_dashboardWidget->setUsername(QString());
+    m_dashboardWidget->clearCanvas();
     m_loginWidget->clearMessage();
     clearSession();
     showLoginScreen();

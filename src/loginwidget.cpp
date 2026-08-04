@@ -9,14 +9,10 @@
 #include <QGraphicsOpacityEffect>
 #include <QLabel>
 #include <QLineEdit>
-#include <QPropertyAnimation>
-#include <QMovie>
 #include <QPixmap>
 #include <QPalette>
 #include <QPushButton>
 #include <QResizeEvent>
-#include <QDir>
-#include <QFile>
 #include <QVBoxLayout>
 #include <QPainter>
 
@@ -33,39 +29,6 @@ const QColor kErrorColor(150, 56, 40);
 const QColor kSuccessColor(76, 111, 63);
 constexpr qreal kBackgroundOpacity = 0.75;
 constexpr int kBackgroundBlurRadius = 24;
-
-QString findBackgroundGifPath() {
-    if (QFile::exists(QStringLiteral(":/bg_ref.gif"))) {
-        return QStringLiteral(":/bg_ref.gif");
-    }
-
-    const QStringList searchRoots = {
-        QDir::currentPath(),
-        QCoreApplication::applicationDirPath(),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/.."),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../.."),
-        QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../../..")
-    };
-
-    QStringList candidates;
-    for (const QString& root : searchRoots) {
-        if (root.isEmpty()) {
-            continue;
-        }
-        candidates << QDir::cleanPath(root + "/bg_ref.gif");
-        candidates << QDir::cleanPath(root + "/bg_ref.GIF");
-    }
-    candidates << QStringLiteral("bg_ref.gif");
-    candidates << QStringLiteral("bg_ref.GIF");
-
-    for (const QString& candidate : candidates) {
-        if (!candidate.isEmpty() && QFileInfo::exists(candidate) && QFileInfo(candidate).isFile()) {
-            return candidate;
-        }
-    }
-
-    return QString();
-}
 
 void applyRoundedBackdropMask(QWidget* widget, const QRect& rect) {
     if (!widget || rect.isEmpty()) {
@@ -89,7 +52,6 @@ void applyRoundedBackdropMask(QWidget* widget, const QRect& rect) {
 LoginWidget::LoginWidget(QWidget* parent)
     : QWidget(parent),
       m_backgroundLabel(new QLabel(this)),
-      m_backgroundMovie(new QMovie(this)),
     m_backgroundOpacityEffect(nullptr),
     m_backgroundFadeAnimation(nullptr),
       m_panel(new QFrame(this)),
@@ -258,15 +220,10 @@ void LoginWidget::buildUi() {
 
 void LoginWidget::setupAnimatedBackground() {
     m_backgroundLabel->hide();
-    m_backgroundMovie->stop();
     m_backgroundLabel->clear();
 }
 
 void LoginWidget::updateAnimatedBackgroundSize() {
-    if (m_backgroundMovie->isValid()) {
-        m_backgroundMovie->setScaledSize(size());
-    }
-
     const QPixmap currentPixmap = m_backgroundLabel->pixmap(Qt::ReturnByValue);
     if (!currentPixmap.isNull()) {
         m_backgroundLabel->setPixmap(currentPixmap.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
