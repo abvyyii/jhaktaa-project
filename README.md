@@ -46,9 +46,8 @@ build\src\jhatkaa.exe
 ```
 P.S. Ensure that you are using the UCRT64 terminal saved directly into your C drive
 
-## If friends clone this repo
+## If you clone this repo
 
-Tell them to:
 
 ```powershell
 git clone https://github.com/<your-name>/<repo>.git
