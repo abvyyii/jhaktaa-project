@@ -14,6 +14,12 @@ Digital logic gate simulator built with Qt and CMake.
 - C++17-capable compiler
 - Qt Widgets development libraries (Qt 6 or Qt 5)
 
+## Minimal hardware requirements for end users
+
+- CPU: 64-bit dual-core or better
+- RAM: 4 GB
+- Disk: 1 GB free
+
 ## Build on Windows
 
 1. Open a terminal with Qt environment available.
