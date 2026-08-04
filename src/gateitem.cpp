@@ -244,14 +244,8 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
     if (m_kind == ItemKind::InputSource) {
         painter->drawRoundedRect(m_rect, 10, 10);
-        painter->setPen(kGateText);
-        painter->drawText(QRectF(0, 0, m_rect.width(), m_rect.height()), Qt::AlignCenter,
-                         QString("INPUT\n%1").arg(m_output ? "1" : "0"));
     } else if (m_kind == ItemKind::OutputSink) {
         painter->drawRoundedRect(m_rect, 10, 10);
-        painter->setPen(kGateText);
-        painter->drawText(QRectF(0, 0, m_rect.width(), m_rect.height()), Qt::AlignCenter,
-                         QString("OUTPUT\n%1").arg(m_output ? "1" : "0"));
     } else {
         const qreal w = m_rect.width();
         const qreal h = m_rect.height();
@@ -291,8 +285,6 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
             painter->setBrush(kGateFill);
             painter->drawEllipse(QPointF(w - 12, h / 2), 8, 8);
         }
-        painter->setPen(kGateText);
-        painter->drawText(QRectF(0, 0, w, h), Qt::AlignCenter, QString::fromStdString(LogicEngine::gateName(m_type)));
     }
 }
 
