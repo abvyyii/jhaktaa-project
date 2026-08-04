@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QPen>
 #include <QGraphicsSceneMouseEvent>
+#include <QFontMetrics>
 
 namespace {
 const QColor kGateFill("#F0F0F0");
@@ -42,7 +43,7 @@ int AnchorItem::inputSlot() const {
 
 GateItem::GateItem(ItemKind kind, GateType type, QGraphicsItem* parent)
     : QGraphicsObject(parent), m_kind(kind), m_type(type), m_value(false), m_inputA(false), m_inputB(false), m_output(false), m_connected(false), m_togglePending(false),
-      m_rect(kind == ItemKind::Gate ? QRectF(0, 0, 98, 63) : QRectF(0, 0, 77, 49)), m_inputSourceA(nullptr), m_inputSourceB(nullptr),
+      m_showLabel(true), m_rect(kind == ItemKind::Gate ? QRectF(0, 0, 98, 63) : QRectF(0, 0, 77, 49)), m_inputSourceA(nullptr), m_inputSourceB(nullptr),
       m_inputAnchorA(nullptr), m_inputAnchorB(nullptr), m_outputAnchor(nullptr) {
     setFlags(ItemIsMovable | ItemIsSelectable);
     setAcceptHoverEvents(true);
@@ -83,6 +84,10 @@ GateType GateItem::gateType() const {
 
 bool GateItem::output() const {
     return m_output;
+}
+
+void GateItem::setShowLabel(bool show) {
+    m_showLabel = show;
 }
 
 void GateItem::toggleValue() {
@@ -285,6 +290,26 @@ void GateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
             painter->setBrush(kGateFill);
             painter->drawEllipse(QPointF(w - 12, h / 2), 8, 8);
         }
+    }
+
+    if (m_showLabel) {
+        QString label;
+        if (m_kind == ItemKind::InputSource) {
+            label = QStringLiteral("INPUT: %1").arg(m_value ? "1" : "0");
+        } else if (m_kind == ItemKind::OutputSink) {
+            label = QStringLiteral("OUTPUT: %1").arg(m_output ? "1" : "0");
+        } else {
+            label = QString::fromStdString(LogicEngine::gateName(m_type));
+        }
+
+        painter->save();
+        painter->setBrush(Qt::NoBrush);
+        painter->setPen(QPen(kGateText, 1));
+        QFont labelFont = painter->font();
+        labelFont.setPointSizeF(std::min(m_rect.width(), m_rect.height()) * 0.16);
+        painter->setFont(labelFont);
+        painter->drawText(QRectF(0, 0, m_rect.width(), m_rect.height()), Qt::AlignCenter, label);
+        painter->restore();
     }
 }
 

@@ -7,6 +7,7 @@
 #include <QPointF>
 #include <QRectF>
 #include <QString>
+#include <QFont>
 
 #include "logicengine.h"
 
@@ -50,6 +51,7 @@ public:
     ItemKind itemKind() const;
     GateType gateType() const;
     bool output() const;
+    void setShowLabel(bool show);
     void toggleValue();
     void setInputA(bool value);
     void setInputB(bool value);
@@ -91,6 +93,7 @@ private:
     bool m_output;
     bool m_connected;
     bool m_togglePending;
+    bool m_showLabel;
     QRectF m_rect;
     QPointer<GateItem> m_inputSourceA;
     QPointer<GateItem> m_inputSourceB;

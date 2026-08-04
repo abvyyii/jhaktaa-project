@@ -935,6 +935,7 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
 
     if (normalized == "INPUT") {
         GateItem iconItem(ItemKind::InputSource);
+        iconItem.setShowLabel(false);
         painter.save();
         painter.translate(2, 2);
         painter.scale((size - 4) / 77.0, (size - 4) / 49.0);
@@ -945,6 +946,7 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
 
     if (normalized == "OUTPUT") {
         GateItem iconItem(ItemKind::OutputSink);
+        iconItem.setShowLabel(false);
         painter.save();
         painter.translate(2, 2);
         painter.scale((size - 4) / 77.0, (size - 4) / 49.0);
@@ -969,6 +971,7 @@ QPixmap DashboardWidget::createGateIcon(const QString& type, int size) {
     else if (normalized == "NOR") gateType = GateType::NOR;
 
     GateItem iconItem(ItemKind::Gate, gateType);
+    iconItem.setShowLabel(false);
     painter.save();
     painter.translate(2, 2);
     painter.scale((size - 4) / 98.0, (size - 4) / 63.0);
