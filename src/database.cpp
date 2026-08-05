@@ -30,8 +30,6 @@ QByteArray Database::randomSalt() {
 }
 
 QByteArray Database::hashPassword(const QByteArray& salt, const QString& password) {
-    // Beginner-safe password storage: a random per-user salt plus SHA-256 keeps plain-text passwords out of the database.
-    // For a stronger production setup later, switch to a dedicated password hash such as bcrypt or Argon2.
     QByteArray data;
     data.reserve(salt.size() + password.toUtf8().size());
     data.append(salt);

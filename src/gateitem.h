@@ -84,7 +84,6 @@ public:
 signals:
     void toggled();
 
-    // Selection-based connection handling is managed by MainWindow.
 
 protected:
     int type() const override { return Type; }
